@@ -1,19 +1,14 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Solitaire.DataAccess.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Solitaire.DataAccess
+namespace Solitaire.DataAccess.Context
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
-            
+
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -25,6 +20,8 @@ namespace Solitaire.DataAccess
             base.OnModelCreating(builder);
         }
 
-        public DbSet<ApplicationUser> Users {  get; set; }
+        public DbSet<ApplicationUser> Users { get; set; }
+
+        public DbSet<SolitaireSession> SolitaireSessions { get; set; }
     }
 }
