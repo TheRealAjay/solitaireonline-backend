@@ -13,7 +13,7 @@ namespace Solitaire.DataAccess.Models
         public string Base64Picture { get; set; } = "";
 
         [ForeignKey(nameof(Models.SolitaireSession))]
-        public int SolitaireSessionId { get; set; }
+        public int? SolitaireSessionId { get; set; }
         public SolitaireSession? SolitaireSession { get; set; }
     }
 }

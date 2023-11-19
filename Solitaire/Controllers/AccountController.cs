@@ -36,10 +36,10 @@ namespace Solitaire.Controllers
             try
             {
                 if (!ModelState.IsValid)
-                    throw new Exception("Modelstate not valid.");
+                    throw new Exception("Model not valid.");
 
                 var user = await _userManager.FindByNameAsync(model.UserName)
-                    ?? throw new UnauthorizedAccessException($"Username or password wrong");
+                    ?? throw new UnauthorizedAccessException("Username or password wrong!");
 
                 var isValidPwd = await _userManager.CheckPasswordAsync(user, model.Password);
                 if (!isValidPwd)
@@ -58,7 +58,7 @@ namespace Solitaire.Controllers
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized();
+                return Unauthorized(ex.Message);
             }
             catch (Exception ex)
             {
@@ -68,9 +68,89 @@ namespace Solitaire.Controllers
 
         [HttpPost]
         [Route("register")]
-        public async Task<IActionResult> Register()
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            return NotFound();
+            try
+            {
+                if (!ModelState.IsValid)
+                    throw new Exception("Model not valid.");
+
+                if (!request.Password.Equals(request.PasswordConfirm))
+                    throw new Exception("Passwords do not match.");
+
+                var userExists = await _userManager.FindByNameAsync(request.UserName);
+                if (userExists is not null)
+                    throw new Exception("Username already in use.");
+
+                var base64Picture = await GetProfilePicture(request.UserName);
+
+                var newUser = new ApplicationUser()
+                {
+                    UserName = request.UserName,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    Base64Picture = base64Picture,
+                    Email = request.Email,
+                    SolitaireSessionId = null
+                };
+
+                var result = await _userManager.CreateAsync(newUser, request.Password);
+                if (!result.Succeeded)
+                    throw new Exception("An error occured.");
+
+                return Ok($"User \"{request.UserName}\" successfully created.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("checkUserNameValid")]
+        public async Task<IActionResult> CheckIfUserNameIsValid(string userName)
+        {
+            try
+            {
+                var user = await _userManager.FindByNameAsync(userName);
+
+                if (user is null)
+                    return Ok("Username valid.");
+                else
+                    return BadRequest("Username alreay in use.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        private static string ConvertToBase64(Stream stream)
+        {
+            byte[] bytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                stream.CopyTo(memoryStream);
+                bytes = memoryStream.ToArray();
+            }
+
+            string base64 = Convert.ToBase64String(bytes);
+            return base64;
+        }
+
+        private async Task<string> GetProfilePicture(string userName)
+        {
+            string base64String = "";
+
+            using (HttpClient client = new HttpClient())
+            {
+                string requestURI = "https://source.boringavatars.com/beam/120/" + userName;
+
+                var stream = await client.GetStreamAsync(requestURI);
+                base64String = ConvertToBase64(stream);
+            }
+
+            return base64String;
         }
     }
 }
