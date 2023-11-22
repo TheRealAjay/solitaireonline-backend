@@ -1,4 +1,4 @@
-﻿using Solitaire.DataAccess.Models;
+﻿using Solitaire.Models;
 
 namespace Solitaire.DataAccess.Repositories.IRepositories
 {

@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Solitaire.DataAccess.Models;
 using Solitaire.DataAccess.Repositories.IRepositories;
 using Solitaire.DataAccess.Services.IServices;
+using Solitaire.Models;
 using Solitaire.ViewModels;
 
 namespace Solitaire.Controllers

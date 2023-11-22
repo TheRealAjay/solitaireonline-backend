@@ -1,6 +1,6 @@
 ﻿using Solitaire.DataAccess.Context;
-using Solitaire.DataAccess.Models;
 using Solitaire.DataAccess.Repositories.IRepositories;
+using Solitaire.Models;
 
 namespace Solitaire.DataAccess.Repositories
 {

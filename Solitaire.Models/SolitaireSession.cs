@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Solitaire.DataAccess.Models
+namespace Solitaire.Models
 {
     public class SolitaireSession
     {
@@ -10,5 +10,7 @@ namespace Solitaire.DataAccess.Models
 
         public string? ApplicationUserId { get; set; }
         public ApplicationUser? ApplicationUser { get; set; }
+
+        public virtual ICollection<Card> Cards { get; set; }
     }
 }

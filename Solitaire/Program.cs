@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Solitaire.DataAccess.Context;
-using Solitaire.DataAccess.Models;
 using Solitaire.DataAccess.Repositories;
 using Solitaire.DataAccess.Repositories.IRepositories;
 using Solitaire.DataAccess.Services;
 using Solitaire.DataAccess.Services.IServices;
+using Solitaire.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Solitaire.DataAccess.Models
+namespace Solitaire.Models
 {
     public class ApplicationUser : IdentityUser
     {
@@ -9,7 +9,7 @@ namespace Solitaire.DataAccess.Models
         public string Base64Picture { get; set; } = "";
 
         [ForeignKey(nameof(Models.SolitaireSession))]
-        public int? SolitaireSessionId { get; set; }
-        public SolitaireSession? SolitaireSession { get; set; }
+        public virtual int? SolitaireSessionId { get; set; }
+        public virtual SolitaireSession? SolitaireSession { get; set; }
     }
 }
