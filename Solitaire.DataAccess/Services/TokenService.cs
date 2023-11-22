@@ -61,7 +61,7 @@ namespace Solitaire.DataAccess.Services
         {
             return new SigningCredentials(
                 new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes("!SomethingSecret!")
+                    Encoding.UTF8.GetBytes("!SomethingSecretAuthenticationToken!")
                 ),
                 SecurityAlgorithms.HmacSha256
             );

@@ -53,7 +53,7 @@ namespace Solitaire.Controllers
                     Username = user.UserName ?? "",
                     Email = user.Email ?? "",
                     Base64String = "data:image/svg+xml;base64," + user.Base64Picture,
-                    Token = accessToken,
+                    Token = accessToken
                 });
             }
             catch (UnauthorizedAccessException ex)
