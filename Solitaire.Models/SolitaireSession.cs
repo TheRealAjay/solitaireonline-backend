@@ -12,5 +12,6 @@ namespace Solitaire.Models
         public ApplicationUser? ApplicationUser { get; set; }
 
         public virtual ICollection<Card> Cards { get; set; }
+        public virtual ICollection<Draw> Draws { get; set; }
     }
 }

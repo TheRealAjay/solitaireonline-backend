@@ -29,6 +29,14 @@ namespace Solitaire.DataAccess.Context
                 .Property(p => p.Id)
                 .UseIdentityColumn();
 
+            builder.Entity<SolitaireSession>()
+                .HasMany(s => s.Draws)
+                .WithOne(d => d.SolitaireSession);
+
+            builder.Entity<Draw>()
+                .Property(p => p.Id)
+                .UseIdentityColumn();
+
             base.OnModelCreating(builder);
         }
 
@@ -37,5 +45,7 @@ namespace Solitaire.DataAccess.Context
         public DbSet<SolitaireSession> SolitaireSessions { get; set; }
 
         public DbSet<Card> Cards { get; set; }
+
+        public DbSet<Draw> Draws { get; set; }
     }
 }

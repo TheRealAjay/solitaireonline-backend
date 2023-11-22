@@ -8,7 +8,7 @@ namespace Solitaire.Models
         public int Id { get; set; }
         public Suit Suit { get; set; }
         public Rank Rank { get; set; }
-        public string? Postition { get; set; }
+        public string Postition { get; set; } = null!;
         public bool Fliped { get; set; }
 
         public virtual int SolitaireSessionId { get; set; }
