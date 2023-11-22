@@ -52,7 +52,8 @@ namespace Solitaire.DataAccess.Repositories
 
         public async Task UpdateAsync(T entity)
         {
-            _dbSet.Update(entity);
+            _dbSet.Attach(entity);
+            _dbSet.Entry(entity).State = EntityState.Modified;
         }
 
         public Task<bool> AnyAsync(Expression<Func<T, bool>> filter, bool asNoTracking)
