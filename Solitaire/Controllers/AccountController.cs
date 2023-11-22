@@ -87,10 +87,7 @@ namespace Solitaire.Controllers
                 var newUser = new ApplicationUser()
                 {
                     UserName = request.UserName,
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
                     Base64Picture = base64Picture,
-                    Email = request.Email,
                     SolitaireSessionId = null
                 };
 
