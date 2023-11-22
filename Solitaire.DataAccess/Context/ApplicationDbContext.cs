@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Solitaire.DataAccess.Models;
+using Solitaire.Models;
 
 namespace Solitaire.DataAccess.Context
 {
@@ -17,11 +17,25 @@ namespace Solitaire.DataAccess.Context
                 .HasOne(u => u.SolitaireSession)
                 .WithOne(u => u.ApplicationUser);
 
+            builder.Entity<SolitaireSession>()
+                .Property(p => p.Id)
+                .UseIdentityColumn();
+
+            builder.Entity<SolitaireSession>()
+                .HasMany(s => s.Cards)
+                .WithOne(c => c.SolitaireSession);
+
+            builder.Entity<Card>()
+                .Property(p => p.Id)
+                .UseIdentityColumn();
+
             base.OnModelCreating(builder);
         }
 
         public DbSet<ApplicationUser> Users { get; set; }
 
         public DbSet<SolitaireSession> SolitaireSessions { get; set; }
+
+        public DbSet<Card> Cards { get; set; }
     }
 }

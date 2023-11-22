@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Solitaire.DataAccess.Context;
@@ -11,9 +12,11 @@ using Solitaire.DataAccess.Context;
 namespace Solitaire.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231122121140_AddedCardsToDb")]
+    partial class AddedCardsToDb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -248,15 +251,10 @@ namespace Solitaire.DataAccess.Migrations
                     b.Property<int>("Rank")
                         .HasColumnType("integer");
 
-                    b.Property<int>("SolitaireSessionId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Suit")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("SolitaireSessionId");
 
                     b.ToTable("Cards");
                 });
@@ -340,22 +338,9 @@ namespace Solitaire.DataAccess.Migrations
                     b.Navigation("SolitaireSession");
                 });
 
-            modelBuilder.Entity("Solitaire.Models.Card", b =>
-                {
-                    b.HasOne("Solitaire.Models.SolitaireSession", "SolitaireSession")
-                        .WithMany("Cards")
-                        .HasForeignKey("SolitaireSessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SolitaireSession");
-                });
-
             modelBuilder.Entity("Solitaire.Models.SolitaireSession", b =>
                 {
                     b.Navigation("ApplicationUser");
-
-                    b.Navigation("Cards");
                 });
 #pragma warning restore 612, 618
         }
