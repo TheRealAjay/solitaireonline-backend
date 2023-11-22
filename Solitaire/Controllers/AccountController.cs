@@ -104,7 +104,7 @@ namespace Solitaire.Controllers
         }
 
         [HttpPost]
-        [Route("checkUserNameValid")]
+        [Route("check")]
         public async Task<IActionResult> CheckIfUserNameIsValid(string userName)
         {
             try
@@ -114,7 +114,7 @@ namespace Solitaire.Controllers
                 if (user is null)
                     return Ok("Username valid.");
                 else
-                    return BadRequest("Username alreay in use.");
+                    return BadRequest("Username already in use.");
             }
             catch (Exception ex)
             {
