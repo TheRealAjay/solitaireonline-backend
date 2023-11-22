@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Solitaire.DataAccess.Models;
 using Solitaire.DataAccess.Repositories.IRepositories;
 using Solitaire.DataAccess.Services.IServices;
@@ -62,6 +61,7 @@ namespace Solitaire.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.Message, ex);
                 return BadRequest(ex.Message);
             }
         }
@@ -99,6 +99,7 @@ namespace Solitaire.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.Message, ex);
                 return BadRequest(ex.Message);
             }
         }
@@ -118,6 +119,7 @@ namespace Solitaire.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.Message, ex);
                 return BadRequest(ex.Message);
             }
         }
