@@ -5,7 +5,9 @@ VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Solitaire", "Solitaire\Solitaire.csproj", "{4D729E8C-5786-4FD7-A05F-A69F991E36D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Solitaire.DataAccess", "Solitaire.DataAccess\Solitaire.DataAccess.csproj", "{37F4AC85-8AC7-4DE0-B424-79764AECF59E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Solitaire.DataAccess", "Solitaire.DataAccess\Solitaire.DataAccess.csproj", "{37F4AC85-8AC7-4DE0-B424-79764AECF59E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Solitaire.Models", "Solitaire.Models\Solitaire.Models.csproj", "{ED8C338C-7BF1-487B-8911-65A515E924E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{37F4AC85-8AC7-4DE0-B424-79764AECF59E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37F4AC85-8AC7-4DE0-B424-79764AECF59E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37F4AC85-8AC7-4DE0-B424-79764AECF59E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED8C338C-7BF1-487B-8911-65A515E924E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED8C338C-7BF1-487B-8911-65A515E924E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED8C338C-7BF1-487B-8911-65A515E924E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED8C338C-7BF1-487B-8911-65A515E924E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

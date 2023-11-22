@@ -65,8 +65,6 @@ namespace Solitaire.DataAccess.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    FirstName = table.Column<string>(type: "text", nullable: true),
-                    LastName = table.Column<string>(type: "text", nullable: true),
                     ProfilePicture = table.Column<byte[]>(type: "bytea", nullable: true),
                     Base64Picture = table.Column<string>(type: "text", nullable: false),
                     SessionId = table.Column<int>(type: "integer", nullable: false),

@@ -22,4 +22,8 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Solitaire.Models\Solitaire.Models.csproj" />
+  </ItemGroup>
+
 </Project>

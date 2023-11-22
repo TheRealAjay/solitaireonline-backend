@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Solitaire.DataAccess\Solitaire.DataAccess.csproj" />
+    <ProjectReference Include="..\Solitaire.Models\Solitaire.Models.csproj" />
   </ItemGroup>
 
 </Project>
