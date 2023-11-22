@@ -17,27 +17,27 @@ namespace Solitaire.Models
 
     public enum Suit
     {
-        Heart,  // Herz
+        Heart,   // Herz
         Diamond, // Raute
-        Spade,  // Pic
-        Club   // Kreuz
+        Spade,   // Pic
+        Clover   // Kreuz
     }
 
     // Wert
     public enum Rank
     {
         Rank_A,
-        RANK_2,
-        RANK_3,
-        RANK_4,
-        RANK_5,
-        RANK_6,
-        RANK_7,
-        RANK_8,
-        RANK_9,
-        RANK_10,
-        RANK_J,
-        RANK_Q,
-        RANK_K,
+        Rank_2,
+        Rank_3,
+        Rank_4,
+        Rank_5,
+        Rank_6,
+        Rank_7,
+        Rank_8,
+        Rank_9,
+        Rank_10,
+        Rank_J,
+        Rank_Q,
+        Rank_K,
     }
 }
