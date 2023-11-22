@@ -33,7 +33,7 @@ namespace Solitaire.Controllers
         {
             Card[] cards = new Card[52];
 
-            CreateDraw(gameRequest, cards);
+            CreateDrawpile(gameRequest, cards);
             CreateColumnsAndRows(gameRequest, cards);
 
             return Ok(cards);
@@ -44,7 +44,7 @@ namespace Solitaire.Controllers
         /// </summary>
         /// <param name="gameRequest"> The gamerequest with the SolitaireSessionId </param>
         /// <param name="cards"> The cards array which should be munipulated </param>
-        private void CreateDraw(GameRequest gameRequest, Card[] cards)
+        private void CreateDrawpile(GameRequest gameRequest, Card[] cards)
         {
             for (int i = 0; i < 24; i++)
             {
@@ -66,7 +66,12 @@ namespace Solitaire.Controllers
             card.SolitaireSessionId = gameRequest.SolitaireSessionId;
             cards[24] = card;
 
-            GenerateGameDeckCards(24, 25, cards, gameRequest);
+            GenerateGameDeckCards(25, 26, 2, cards, gameRequest);
+            GenerateGameDeckCards(27, 29, 3, cards, gameRequest);
+            GenerateGameDeckCards(30, 33, 4, cards, gameRequest);
+            GenerateGameDeckCards(34, 38, 5, cards, gameRequest);
+            GenerateGameDeckCards(39, 44, 6, cards, gameRequest);
+            GenerateGameDeckCards(45, 51, 7, cards, gameRequest);
         }
 
         /// <summary>
@@ -78,7 +83,8 @@ namespace Solitaire.Controllers
         private Card GetValidCard(Card[] cards)
         {
             Random random = new();
-            Card card = new();
+            Card card;
+            var cardsToCheck = cards.Where(c => c is not null);
 
             do
             {
@@ -88,14 +94,14 @@ namespace Solitaire.Controllers
                     Rank = (Rank)random.Next(0, 13)
                 };
 
-            } while (cards.Any(c => c.Suit == card.Suit || c.Rank == card.Rank));
+            } while (cardsToCheck.Any(c => c.Suit == card.Suit && c.Rank == card.Rank));
 
             return card;
         }
 
         private void GenerateGameDeckCards(int startValue, int endValue, int column, Card[] cards, GameRequest gameRequest)
         {
-            Card card = new();
+            Card card;
             for (int i = startValue; i <= endValue; i++)
             {
                 card = GetValidCard(cards);

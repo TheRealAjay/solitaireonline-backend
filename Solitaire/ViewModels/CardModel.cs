@@ -16,8 +16,8 @@ namespace Solitaire.ViewModels
         /// Checks a card if it is black
         /// </summary>
         /// <param name="card"> The card which should be check if the color is black </param>
-        /// <returns> True if the card is Spade or Club otherwise false </returns>
-        public static bool IsBlack(Card card) => card.Suit == Suit.Spade || card.Suit == Suit.Club;
+        /// <returns> True if the card is Spade or Clover otherwise false </returns>
+        public static bool IsBlack(Card card) => card.Suit == Suit.Spade || card.Suit == Suit.Clover;
 
         /// <summary>
         /// Checks a card if it is red
