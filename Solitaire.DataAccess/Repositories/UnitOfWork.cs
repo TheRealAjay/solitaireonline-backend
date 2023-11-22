@@ -12,12 +12,15 @@ namespace Solitaire.DataAccess.Repositories
 
         public ICardRepository Cards { get; }
 
+        public IDrawRepository Draws { get; }
+
 
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
             SolitaireSessions = new SolitaireSessionRepository(context);
             Cards = new CardRepository(context);
+            Draws = new DrawRepository(context);
         }
 
         public async Task SaveAsync()

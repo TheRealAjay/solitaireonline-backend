@@ -4,6 +4,7 @@
     {
         ISolitaireSessionRepository SolitaireSessions { get; }
         ICardRepository Cards { get; }
+        IDrawRepository Draws { get; }
         Task SaveAsync();
     }
 }
