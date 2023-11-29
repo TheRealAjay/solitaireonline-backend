@@ -16,11 +16,11 @@ namespace Solitaire.DataAccess.Services
         public string CreateToken(ApplicationUser user)
         {
             var expiration = DateTime.UtcNow.AddMinutes(ExpirationMinutes);
-
-            var claims = CreateClaims(user);
-            var signingCredentials = CreateSigningCredentials();
-            var token = CreateJwtToken(claims, signingCredentials, expiration);
-
+            var token = CreateJwtToken(
+                CreateClaims(user),
+                CreateSigningCredentials(),
+                expiration
+            );
             var tokenHandler = new JwtSecurityTokenHandler();
             return tokenHandler.WriteToken(token);
         }
@@ -35,7 +35,7 @@ namespace Solitaire.DataAccess.Services
                 signingCredentials: credentials
             );
 
-        private IEnumerable<Claim> CreateClaims(IdentityUser user)
+        private IEnumerable<Claim> CreateClaims(ApplicationUser user)
         {
             try
             {

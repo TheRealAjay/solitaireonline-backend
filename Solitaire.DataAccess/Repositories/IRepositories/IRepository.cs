@@ -9,6 +9,7 @@ namespace Solitaire.DataAccess.Repositories.IRepositories
         Task<T?> FindAsync(object id);
         Task<T?> GetFirstOrDefaultAsync(Expression<Func<T, bool>> filter, bool asNoTracking = false);
         Task AddAsync(T entity);
+        Task AddRangeAsync(IEnumerable<T> entity);
         Task UpdateAsync(T entity);
         Task RemoveAsync(T entity);
     }

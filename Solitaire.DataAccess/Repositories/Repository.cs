@@ -19,6 +19,11 @@ namespace Solitaire.DataAccess.Repositories
             await _dbSet.AddAsync(entity);
         }
 
+        public async Task AddRangeAsync(IEnumerable<T> entity)
+        {
+            await _dbSet.AddRangeAsync(entity);
+        }
+
         public async Task<T?> FindAsync(object id)
         {
             return await _dbSet.FindAsync(id);

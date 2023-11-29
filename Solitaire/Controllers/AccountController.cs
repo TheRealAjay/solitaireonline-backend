@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Solitaire.DataAccess.Repositories.IRepositories;
 using Solitaire.DataAccess.Services.IServices;
@@ -104,7 +105,7 @@ namespace Solitaire.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpGet]
         [Route("check")]
         public async Task<IActionResult> CheckIfUserNameIsValid(string userName)
         {

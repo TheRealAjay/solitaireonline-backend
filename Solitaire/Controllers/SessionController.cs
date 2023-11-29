@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Solitaire.DataAccess.Repositories.IRepositories;
 using Solitaire.Models;
@@ -7,7 +8,7 @@ namespace Solitaire.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class SessionController : ControllerBase
+    public class SessionController : Controller
     {
         private readonly ILogger<SessionController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -51,7 +52,7 @@ namespace Solitaire.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpPut, Authorize]
         [Route("create")]
         public async Task<IActionResult> StartSession()
         {

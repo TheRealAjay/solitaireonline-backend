@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using Solitaire.DataAccess.Repositories.IRepositories;
+using Solitaire.Helpers;
 using Solitaire.Models;
 using Solitaire.ViewModels;
-using System;
 
 namespace Solitaire.Controllers
 {
@@ -34,22 +33,81 @@ namespace Solitaire.Controllers
         {
             try
             {
-            Card[] cards = new Card[52];
+                Card[] cards = new Card[52];
 
-            CreateDrawpile(gameRequest, cards);
-            CreateColumnsAndRows(gameRequest, cards);
+                CreateDrawpile(gameRequest, cards);
+                CreateColumnsAndRows(gameRequest, cards);
 
                 await _unitOfWork.Cards.AddRangeAsync(cards);
                 await _unitOfWork.SaveAsync();
 
-            return Ok(cards);
-        }
+                return Ok(cards);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost]
+        [Route("move")]
+        public async Task<IActionResult> Move(DrawModel drawRequest)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    throw new Exception("Modelstate not valid.");
+
+                var draws = (await _unitOfWork.Draws.GetAllAsync())
+                    .Where(c => c.SolitaireSessionId == drawRequest.SolitaireSessionId);
+                var cards = (await _unitOfWork.Cards.GetAllAsync())
+                    .Where(c => c.SolitaireSessionId == drawRequest.SolitaireSessionId);
+
+                var card = cards.Single(c => c.Postition == drawRequest.FromPosition);
+                var toPositionChar = drawRequest.ToPosition.ToArray();
+                List<string> toPosition = new()
+                {
+                    toPositionChar[0].ToString()
+                };
+
+                ParseCharArrayToList(toPositionChar, toPosition);
+
+                switch (toPosition[0])
+                {
+                    case "c":
+                        // Moved to card deck cxrx
+                        if (await CheckCardForColumn(toPosition, card, drawRequest))
+                            return Ok(true);
+
+                        return Ok(false);
+
+                    case "b":
+                        // Move to build
+                        if (await CheckCardForBuild(toPosition, card, drawRequest))
+                            return Ok(true);
+
+                        return Ok(false);
+
+                    default:
+                        throw new Exception("Postion not available");
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
+
+            return NotFound();
+        }
+
+        #region PRIVATE FUNCTIONS
 
         /// <summary>
         /// Creates the drawpile
@@ -116,6 +174,14 @@ namespace Solitaire.Controllers
             return card;
         }
 
+        /// <summary>
+        /// Generates the cxrx cards
+        /// </summary>
+        /// <param name="startValue"> The startvalue of the row </param>
+        /// <param name="endValue"> The endvalue of the row </param>
+        /// <param name="column"> The column the card lays </param>
+        /// <param name="cards"> The cards array </param>
+        /// <param name="gameRequest"> Stores the solitairesessionID </param>
         private void GenerateGameDeckCards(int startValue, int endValue, int column, Card[] cards, GameRequest gameRequest)
         {
             Card card;
@@ -130,5 +196,80 @@ namespace Solitaire.Controllers
                 cards[i] = card;
             }
         }
+
+        private void ParseCharArrayToList(char[] toPositionChar, List<string> toPosition)
+        {
+            string tempPos = string.Empty;
+
+            for (int i = 1; i < toPositionChar.Length; i++)
+            {
+                if (int.TryParse(toPositionChar[i].ToString(), out int _))
+                {
+                    tempPos += toPositionChar[i].ToString();
+                }
+                else
+                {
+                    toPosition.Add(tempPos);
+                    tempPos = string.Empty;
+                }
+            }
+
+            toPosition.Add(tempPos);
+        }
+
+        private async Task<bool> CheckCardForColumn(List<string> toPosition, Card card, DrawModel drawRequest)
+        {
+            // cxrx --> toPosition has 4 entries
+            GetPositionAsInt(toPosition[1].ToString(), out int column);
+            GetPositionAsInt(toPosition[3].ToString(), out int row);
+
+            await CheckIfCardExists($"c{column}r{row}");
+
+            if (row == 0)
+                return true;
+
+            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Postition == $"c{column}r{row - 1}")
+                ?? throw new ArgumentException("Parent card does not exist.");
+
+            if (CardHelper.CanBePlacedBottom(parent, card))
+                return true;
+
+            return false;
+        }
+
+        private async Task<bool> CheckCardForBuild(List<string> toPosition, Card card, DrawModel drawRequest)
+        {
+            // bx --> toPosition has two entries
+            GetPositionAsInt(toPosition[1].ToString(), out int buildPosition);
+
+            await CheckIfCardExists($"d{buildPosition}");
+
+            if (buildPosition == 0)
+                return true;
+
+            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Postition == $"d{buildPosition - 1}")
+                ?? throw new ArgumentException("Parent card does not exist.");
+
+            if (CardHelper.CanBePlacedOnBuild(parent, card))
+                return true;
+
+            return false;
+        }
+
+        private void GetPositionAsInt(string number, out int position)
+        {
+            if (!int.TryParse(number, out position))
+                throw new ArgumentException("Number has the wrong format.");
+        }
+
+        private async Task CheckIfCardExists(string position)
+        {
+
+            var existingCard = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Postition == position);
+            if (existingCard is not null)
+                throw new ArgumentException("Card exists.");
+        }
+
+        #endregion
     }
 }
