@@ -13,7 +13,7 @@ namespace Solitaire.DataAccess.Services
     {
         private const int ExpirationMinutes = 600;
 
-        public string CreateToken(ApplicationUser user)
+        public string CreateToken(IdentityUser user)
         {
             var expiration = DateTime.UtcNow.AddMinutes(ExpirationMinutes);
             var token = CreateJwtToken(
@@ -35,7 +35,7 @@ namespace Solitaire.DataAccess.Services
                 signingCredentials: credentials
             );
 
-        private IEnumerable<Claim> CreateClaims(ApplicationUser user)
+        private IEnumerable<Claim> CreateClaims(IdentityUser user)
         {
             try
             {
@@ -45,8 +45,7 @@ namespace Solitaire.DataAccess.Services
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)),
                     new Claim(ClaimTypes.NameIdentifier, user.Id),
-                    new Claim(ClaimTypes.Name, user.UserName ?? ""),
-                    new Claim(ClaimTypes.Email, user.Email ?? "")
+                    new Claim(ClaimTypes.Name, user.UserName ?? "")
                 };
                 return claims;
             }
