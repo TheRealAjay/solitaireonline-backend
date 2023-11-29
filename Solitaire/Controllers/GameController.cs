@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -9,8 +9,9 @@ using System;
 
 namespace Solitaire.Controllers
 {
-    [Route("[controller]")]
+    [Authorize]
     [ApiController]
+    [Route("[controller]")]
     public class GameController : ControllerBase
     {
         private readonly ILogger<GameController> _logger;
@@ -31,12 +32,23 @@ namespace Solitaire.Controllers
         [Route("initialize")]
         public async Task<IActionResult> Initialize([FromBody]GameRequest gameRequest)
         {
+            try
+            {
             Card[] cards = new Card[52];
 
             CreateDrawpile(gameRequest, cards);
             CreateColumnsAndRows(gameRequest, cards);
 
+                await _unitOfWork.Cards.AddRangeAsync(cards);
+                await _unitOfWork.SaveAsync();
+
             return Ok(cards);
+        }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>
@@ -50,7 +62,7 @@ namespace Solitaire.Controllers
             {
                 Card card = GetValidCard(cards);
 
-                card.Postition = "draw" + (i + 1);
+                card.Postition = "d" + (i + 1);
                 card.Flipped = false;
                 card.SolitaireSessionId = gameRequest.SolitaireSessionId;
                 
@@ -58,6 +70,11 @@ namespace Solitaire.Controllers
             }
         }
 
+        /// <summary>
+        /// Generates the column and row cards
+        /// </summary>
+        /// <param name="gameRequest"> Stores the solitaireSessionID </param>
+        /// <param name="cards"> The cards array </param>
         private void CreateColumnsAndRows(GameRequest gameRequest, Card[] cards)
         {
             var card = GetValidCard(cards);
