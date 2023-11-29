@@ -52,7 +52,7 @@ namespace Solitaire.Controllers
             }
         }
 
-        [HttpPut, Authorize]
+        [HttpPost, Authorize]
         [Route("create")]
         public async Task<IActionResult> StartSession()
         {

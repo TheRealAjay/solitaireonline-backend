@@ -4,7 +4,7 @@ using Solitaire.Models;
 
 namespace Solitaire.DataAccess.Context
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {

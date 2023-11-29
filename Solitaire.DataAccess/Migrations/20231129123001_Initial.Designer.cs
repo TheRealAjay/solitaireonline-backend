@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Solitaire.DataAccess.Context;
@@ -11,9 +12,11 @@ using Solitaire.DataAccess.Context;
 namespace Solitaire.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231129123001_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -115,7 +118,7 @@ namespace Solitaire.DataAccess.Migrations
 
                     b.HasIndex("SolitaireSessionId");
 
-                    b.ToTable("Cards");
+                    b.ToTable("Card");
                 });
 
             modelBuilder.Entity("Solitaire.Models.Draw", b =>
@@ -144,7 +147,7 @@ namespace Solitaire.DataAccess.Migrations
 
                     b.HasIndex("SolitaireSessionId");
 
-                    b.ToTable("Draws");
+                    b.ToTable("Draw");
                 });
 
             modelBuilder.Entity("Solitaire.Models.SolitaireSession", b =>
@@ -163,7 +166,7 @@ namespace Solitaire.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SolitaireSessions");
+                    b.ToTable("SolitaireSession");
                 });
 
             modelBuilder.Entity("Solitaire.Models.ApplicationUser", b =>
