@@ -1,6 +1,0 @@
-@Solitaire_HostAddress = http://localhost:5293
-
-GET {{Solitaire_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
