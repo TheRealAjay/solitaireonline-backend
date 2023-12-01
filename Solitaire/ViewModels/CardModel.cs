@@ -5,8 +5,8 @@ namespace Solitaire.ViewModels
     public class CardModel
     {
         public int Id { get; set; }
-        public Suit Suit { get; set; }
-        public Rank Rank { get; set; }
+        public CardType Type { get; set; }
+        public Value Value { get; set; }
         public string Postition { get; set; } = null!;
         public bool Flipped { get; set; }
 

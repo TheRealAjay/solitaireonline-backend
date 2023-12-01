@@ -6,8 +6,8 @@ namespace Solitaire.Models
     {
         [Key]
         public int Id { get; set; }
-        public Suit Suit { get; set; }
-        public Rank Rank { get; set; }
+        public CardType Type { get; set; }
+        public Value Value { get; set; }
         public string Postition { get; set; } = null!;
         public bool Flipped { get; set; }
 
@@ -15,7 +15,7 @@ namespace Solitaire.Models
         public virtual SolitaireSession SolitaireSession { get; set; }
     }
 
-    public enum Suit
+    public enum CardType
     {
         Heart,   // Herz
         Diamond, // Raute
@@ -24,7 +24,7 @@ namespace Solitaire.Models
     }
 
     // Wert
-    public enum Rank
+    public enum Value
     {
         Rank_A,
         Rank_2,
