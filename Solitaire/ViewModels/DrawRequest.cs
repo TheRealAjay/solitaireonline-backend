@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Solitaire.ViewModels
 {
-    public class DrawModel
+    public class DrawRequest
     {
         [Required]
         public int Id { get; set; }
@@ -16,6 +16,5 @@ namespace Solitaire.ViewModels
 
         [Required]
         public int SolitaireSessionId { get; set; }
-        public SolitaireSession? SolitaireSession { get; set; }
     }
 }

@@ -52,7 +52,7 @@ namespace Solitaire.Controllers
 
         [HttpPost]
         [Route("move")]
-        public async Task<IActionResult> Move(DrawModel drawRequest)
+        public async Task<IActionResult> Move(DrawRequest drawRequest)
         {
             try
             {
@@ -77,14 +77,14 @@ namespace Solitaire.Controllers
                 {
                     case "c":
                         // Moved to card deck cxrx
-                        if (await CheckCardForColumn(toPosition, card, drawRequest))
+                        if (await CheckCardForColumn(toPosition, card))
                             return Ok(true);
 
                         return Ok(false);
 
                     case "b":
                         // Move to build
-                        if (await CheckCardForBuild(toPosition, card, drawRequest))
+                        if (await CheckCardForBuild(toPosition, card))
                             return Ok(true);
 
                         return Ok(false);
@@ -103,8 +103,6 @@ namespace Solitaire.Controllers
                 _logger.LogError(ex, ex.Message);
                 return BadRequest(ex.Message);
             }
-
-            return NotFound();
         }
 
         #region PRIVATE FUNCTIONS
@@ -165,11 +163,11 @@ namespace Solitaire.Controllers
             {
                 card = new Card()
                 {
-                    Suit = (Suit)random.Next(0, 4),
-                    Rank = (Rank)random.Next(0, 13)
+                    Type = (CardType)random.Next(0, 4),
+                    Value = (Value)random.Next(0, 13)
                 };
 
-            } while (cardsToCheck.Any(c => c.Suit == card.Suit && c.Rank == card.Rank));
+            } while (cardsToCheck.Any(c => c.Type == card.Type && c.Value == card.Value));
 
             return card;
         }
@@ -189,8 +187,10 @@ namespace Solitaire.Controllers
             {
                 card = GetValidCard(cards);
 
-                card.Postition = $"c{column}r{i - (i -1)}";
-                card.Flipped = i != 24;
+                // Generates the position cxrx begining with cxr1
+                card.Postition = $"c{column}r{i - (startValue - 1)}";
+                // flipped true --> value and type visible
+                card.Flipped = i == endValue;
                 card.SolitaireSessionId = gameRequest.SolitaireSessionId;
 
                 cards[i] = card;
@@ -217,7 +217,7 @@ namespace Solitaire.Controllers
             toPosition.Add(tempPos);
         }
 
-        private async Task<bool> CheckCardForColumn(List<string> toPosition, Card card, DrawModel drawRequest)
+        private async Task<bool> CheckCardForColumn(List<string> toPosition, Card card)
         {
             // cxrx --> toPosition has 4 entries
             GetPositionAsInt(toPosition[1].ToString(), out int column);
@@ -237,7 +237,7 @@ namespace Solitaire.Controllers
             return false;
         }
 
-        private async Task<bool> CheckCardForBuild(List<string> toPosition, Card card, DrawModel drawRequest)
+        private async Task<bool> CheckCardForBuild(List<string> toPosition, Card card)
         {
             // bx --> toPosition has two entries
             GetPositionAsInt(toPosition[1].ToString(), out int buildPosition);

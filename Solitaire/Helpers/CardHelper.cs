@@ -9,14 +9,14 @@ namespace Solitaire.Helpers
         /// </summary>
         /// <param name="card"> The card which should be check if the color is black </param>
         /// <returns> True if the card is Spade or Clover otherwise false </returns>
-        public static bool IsBlack(Card card) => card.Suit == Suit.Spade || card.Suit == Suit.Clover;
+        public static bool IsBlack(Card card) => card.Type == CardType.Spade || card.Type == CardType.Clover;
 
         /// <summary>
         /// Checks a card if it is red
         /// </summary>
         /// <param name="card"> The card which should be check if the color is red </param>
         /// <returns> True if the card is Heart or Diamond otherwise false </returns>
-        public static bool IsRed(Card card) => card.Suit == Suit.Heart || card.Suit == Suit.Diamond;
+        public static bool IsRed(Card card) => card.Type == CardType.Heart || card.Type == CardType.Diamond;
 
         /// <summary>
         /// Checks if the colors are different
@@ -33,7 +33,7 @@ namespace Solitaire.Helpers
         /// <param name="higher"> The higher card </param>
         /// <param name="lower"> The lower card </param>
         /// <returns> True if the higher card is one over the lower card otherwise false </returns>
-        public static bool IsInSequence(Card higher, Card lower) => higher.Rank == lower.Rank + 1;
+        public static bool IsInSequence(Card higher, Card lower) => higher.Value == lower.Value + 1;
 
         /// <summary>
         /// Checks if the lower card can be placed under the higher card
@@ -50,7 +50,7 @@ namespace Solitaire.Helpers
         /// <param name="first"> The first card </param>
         /// <param name="second"> The second card </param>
         /// <returns> True if the first card and the second card have the same suit otherwise false </returns>
-        public static bool IsSameSuit(Card first, Card second) => first.Suit == second.Suit;
+        public static bool IsSameSuit(Card first, Card second) => first.Type == second.Type;
 
         /// <summary>
         /// Checks if the card can be placed at the foundation
