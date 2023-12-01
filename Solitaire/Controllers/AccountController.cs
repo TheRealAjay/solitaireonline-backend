@@ -17,20 +17,17 @@ namespace Solitaire.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ITokenService _tokenService;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ApplicationDbContext _context;
 
         public AccountController(
             ILogger<AccountController> logger,
             UserManager<ApplicationUser> userManager,
             ITokenService tokenService,
-            IUnitOfWork unitOfWork,
-            ApplicationDbContext context)
+            IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _userManager = userManager;
             _tokenService = tokenService;
             _unitOfWork = unitOfWork;
-            _context = context;
         }
 
         [HttpPost]
@@ -50,7 +47,7 @@ namespace Solitaire.Controllers
                     throw new UnauthorizedAccessException("Username or password wrong!");
 
                 var accessToken = _tokenService.CreateToken(user);
-                await _context.SaveChangesAsync();
+                await _unitOfWork.SaveAsync();
 
                 return Ok(new AuthResponse
                 {
