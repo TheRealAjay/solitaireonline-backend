@@ -1,16 +1,14 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Solitaire.Models;
 
 namespace Solitaire.DataAccess.Context
 {
     public class ApplicationDbContext : DbContext
     {
-        private readonly IConfiguration _configuration;
-        public ApplicationDbContext(IConfiguration configuration)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
-            _configuration = configuration;
+
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -40,12 +38,6 @@ namespace Solitaire.DataAccess.Context
                 .UseIdentityColumn();
 
             base.OnModelCreating(builder);
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder options)
-        {
-            // connect to postgres with connection string from app settings
-            options.UseNpgsql(_configuration.GetConnectionString("Solitaire") ?? string.Empty);
         }
 
         public DbSet<ApplicationUser> Users { get; set; }
