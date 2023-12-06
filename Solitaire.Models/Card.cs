@@ -26,7 +26,7 @@ namespace Solitaire.Models
     // Wert
     public enum Value
     {
-        Rank_A,
+        Rank_1,
         Rank_2,
         Rank_3,
         Rank_4,
@@ -36,8 +36,8 @@ namespace Solitaire.Models
         Rank_8,
         Rank_9,
         Rank_10,
-        Rank_J,
-        Rank_Q,
-        Rank_K,
+        Rank_11,
+        Rank_12,
+        Rank_13
     }
 }
