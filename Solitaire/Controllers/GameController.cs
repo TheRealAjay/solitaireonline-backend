@@ -27,9 +27,14 @@ namespace Solitaire.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        /// <summary>
+        /// Creates the initial card deck (at beginning)
+        /// </summary>
+        /// <param name="gameRequest"> Gamerequest contains the solitaire session id </param>
+        /// <returns> The initial card deck </returns>
         [HttpPost]
         [Route("initialize")]
-        public async Task<IActionResult> Initialize([FromBody]GameRequest gameRequest)
+        public async Task<IActionResult> Initialize([FromBody] GameRequest gameRequest)
         {
             try
             {
@@ -50,53 +55,96 @@ namespace Solitaire.Controllers
             }
         }
 
+        /// <summary>
+        /// Moves one card to a specified position
+        /// </summary>
+        /// <param name="drawRequest"> The requestmodel contains the data for the draw </param>
+        /// <returns> Ok(true) if the move is valid otherwise Ok(false) </returns>
         [HttpPost]
         [Route("move")]
-        public async Task<IActionResult> Move(DrawRequest drawRequest)
+        public async Task<IActionResult> Move([FromBody] DrawRequest drawRequest)
         {
             try
             {
                 if (!ModelState.IsValid)
                     throw new Exception("Modelstate not valid.");
 
-                var draws = (await _unitOfWork.Draws.GetAllAsync())
-                    .Where(c => c.SolitaireSessionId == drawRequest.SolitaireSessionId);
-                var cards = (await _unitOfWork.Cards.GetAllAsync())
-                    .Where(c => c.SolitaireSessionId == drawRequest.SolitaireSessionId);
-
-                var card = cards.Single(c => c.Postition == drawRequest.FromPosition);
-                var toPositionChar = drawRequest.ToPosition.ToArray();
-                List<string> toPosition = new()
-                {
-                    toPositionChar[0].ToString()
-                };
-
-                ParseCharArrayToList(toPositionChar, toPosition);
-
-                switch (toPosition[0])
-                {
-                    case "c":
-                        // Moved to card deck cxrx
-                        if (await CheckCardForColumn(toPosition, card))
-                            return Ok(true);
-
-                        return Ok(false);
-
-                    case "b":
-                        // Move to build
-                        if (await CheckCardForBuild(toPosition, card))
-                            return Ok(true);
-
-                        return Ok(false);
-
-                    default:
-                        throw new Exception("Postion not available");
-                }
+                var result = await MoveCard(drawRequest);
+                return Ok(result);
             }
             catch (ArgumentException ex)
             {
                 _logger.LogError(ex, ex.Message);
                 return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("moveMore")]
+        public async Task<IActionResult> MoveMoreThanOneCard([FromBody] List<DrawRequest> drawRequests)
+        {
+            for (int i = 0; i < drawRequests.Count; i++)
+            {
+                var result = await MoveCard(drawRequests[i]);
+                if (!result)
+                {
+                    if (i == 0)
+                        return Ok(false);
+                    else
+                    {
+
+                    }
+                }
+            }
+
+            return Ok(true);
+        }
+
+        /// <summary>
+        /// Flips a card --> visible
+        /// </summary>
+        /// <param name="flipRequest"> The flip request class holds the values for flipping </param>
+        /// <returns> Ok(true) if the card successfully flipped </returns>
+        [HttpPost]
+        [Route("flip")]
+        public async Task<IActionResult> FlipCard([FromBody] FlipRequest flipRequest)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    throw new Exception("Modelstate not valid.");
+
+                var cards = (await _unitOfWork.Cards.GetAllAsync())
+                    .Where(c => c.SolitaireSessionId == flipRequest.SolitaireSessionId);
+                var draws = (await _unitOfWork.Draws.GetAllAsync())
+                    .Where(c => c.SolitaireSessionId == flipRequest.SolitaireSessionId);
+
+                // If From and 
+                Draw draw = new()
+                {
+                    FromPosition = flipRequest.Position,
+                    ToPosition = flipRequest.Position,
+                    WasFlipped = true,
+                    SolitaireSessionId = flipRequest.SolitaireSessionId
+                };
+
+                var lastDraw = draws.OrderBy(c => c.Sort)
+                                    .LastOrDefault();
+
+                if (lastDraw is null)
+                    draw.Sort = 1;
+                else
+                    draw.Sort = lastDraw.Sort + 1;
+
+                await _unitOfWork.Draws.AddAsync(draw);
+                await _unitOfWork.SaveAsync();
+                
+                return Ok(true);
             }
             catch (Exception ex)
             {
@@ -240,20 +288,36 @@ namespace Solitaire.Controllers
         private async Task<bool> CheckCardForBuild(List<string> toPosition, Card card)
         {
             // bx --> toPosition has two entries
-            GetPositionAsInt(toPosition[1].ToString(), out int buildPosition);
+            GetPositionAsInt(toPosition[1], out int buildPosition);
 
-            await CheckIfCardExists($"d{buildPosition}");
+            await CheckIfCardExists($"b{buildPosition}");
 
             if (buildPosition == 0)
                 return true;
 
-            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Postition == $"d{buildPosition - 1}")
+            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Postition == $"b{buildPosition - 1}")
                 ?? throw new ArgumentException("Parent card does not exist.");
 
             if (CardHelper.CanBePlacedOnBuild(parent, card))
                 return true;
 
             return false;
+        }
+
+        private async Task<bool> CheckCardForDraw(List<string> toPosition, Card card)
+        {
+            // dx --> toPosition has two entries
+            GetPositionAsInt(toPosition[1], out int drawPosition);
+
+            await CheckIfCardExists($"d{drawPosition}");
+
+            if (drawPosition == 0)
+                return true;
+
+            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Postition == $"d{drawPosition - 1}")
+                ?? throw new ArgumentException("Parent card does not exist.");
+
+            return true;
         }
 
         private void GetPositionAsInt(string number, out int position)
@@ -268,6 +332,76 @@ namespace Solitaire.Controllers
             var existingCard = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Postition == position);
             if (existingCard is not null)
                 throw new ArgumentException("Card exists.");
+        }
+
+        private Draw GetDraw(IEnumerable<Draw> draws, DrawRequest drawRequest)
+        {
+            var lastDraw = draws.OrderBy(c => c.Sort)
+                                .LastOrDefault();
+
+            Draw draw = new()
+            {
+                FromPosition = drawRequest.FromPosition,
+                ToPosition = drawRequest.ToPosition,
+                WasFlipped = false,
+                SolitaireSessionId = drawRequest.SolitaireSessionId
+            };
+
+            if (lastDraw is null)
+                draw.Sort = 1;
+            else
+                draw.Sort = lastDraw.Sort + 1;
+
+            return draw;
+        }
+
+        private async Task<bool> MoveCard(DrawRequest drawRequest)
+        {
+            var draws = (await _unitOfWork.Draws.GetAllAsync())
+                .Where(c => c.SolitaireSessionId == drawRequest.SolitaireSessionId);
+            var cards = (await _unitOfWork.Cards.GetAllAsync())
+                .Where(c => c.SolitaireSessionId == drawRequest.SolitaireSessionId);
+
+            var card = cards.Single(c => c.Postition == drawRequest.FromPosition);
+            var toPositionChar = drawRequest.ToPosition.ToArray();
+            List<string> toPosition = new()
+                {
+                    toPositionChar[0].ToString()
+                };
+
+            ParseCharArrayToList(toPositionChar, toPosition);
+
+            switch (toPosition[0])
+            {
+                case "c":
+                    // Moved to card deck cxrx
+                    if (!await CheckCardForColumn(toPosition, card))
+                        return false;
+
+                    var drawCxRx = GetDraw(draws, drawRequest);
+
+                    card.Postition = drawCxRx.ToPosition;
+                    await _unitOfWork.Cards.UpdateAsync(card);
+                    await _unitOfWork.Draws.AddAsync(drawCxRx);
+                    await _unitOfWork.SaveAsync();
+
+                    return true;
+
+                case "b":
+                    // Move to build
+                    if (!await CheckCardForBuild(toPosition, card))
+                        return false;
+
+                    var drawBx = GetDraw(draws, drawRequest);
+
+                    await _unitOfWork.Draws.AddAsync(drawBx);
+                    await _unitOfWork.SaveAsync();
+
+                    return true;
+
+                default:
+                    throw new Exception("Position not available");
+            }
         }
 
         #endregion

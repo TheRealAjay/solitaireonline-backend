@@ -9,6 +9,7 @@ namespace Solitaire.Models
         public int Sort { get; set; }
         public string FromPosition { get; set; } = null!;
         public string ToPosition { get; set; } = null!;
+        public bool WasFlipped { get; set; }
 
         public virtual int SolitaireSessionId { get; set; }
         public virtual SolitaireSession SolitaireSession { get; set; }
