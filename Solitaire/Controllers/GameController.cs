@@ -338,22 +338,6 @@ namespace Solitaire.Controllers
             return false;
         }
 
-        private async Task<bool> CheckCardForDraw(List<string> toPosition, Card card)
-        {
-            // dx --> toPosition has two entries
-            GetPositionAsInt(toPosition[1], out int drawPosition);
-
-            await CheckIfCardExists($"d{drawPosition}");
-
-            if (drawPosition == 0)
-                return true;
-
-            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == $"d{drawPosition - 1}")
-                ?? throw new ArgumentException("Parent card does not exist.");
-
-            return true;
-        }
-
         private void GetPositionAsInt(string number, out int position)
         {
             if (!int.TryParse(number, out position))
