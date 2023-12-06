@@ -113,12 +113,12 @@ namespace Solitaire.Controllers
                             {
                                 var cardToUpdate = (await _unitOfWork.Cards.GetAllAsync())
                                     .Where(c => c.SolitaireSessionId == drawRequests[i].SolitaireSessionId)
-                                    .SingleOrDefault(c => c.Postition == drawToDelete.ToPosition);
+                                    .SingleOrDefault(c => c.Position == drawToDelete.ToPosition);
 
                                 if (cardToUpdate is null)
                                     continue;
 
-                                cardToUpdate.Postition = drawToDelete.FromPosition;
+                                cardToUpdate.Position = drawToDelete.FromPosition;
 
                                 await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
                             }
@@ -200,7 +200,7 @@ namespace Solitaire.Controllers
             {
                 Card card = GetValidCard(cards);
 
-                card.Postition = "d" + (i + 1);
+                card.Position = "d" + (i + 1);
                 card.Flipped = false;
                 card.SolitaireSessionId = gameRequest.SolitaireSessionId;
                 
@@ -216,7 +216,7 @@ namespace Solitaire.Controllers
         private void CreateColumnsAndRows(GameRequest gameRequest, Card[] cards)
         {
             var card = GetValidCard(cards);
-            card.Postition = "c1r1";
+            card.Position = "c1r1";
             card.Flipped = true;
             card.SolitaireSessionId = gameRequest.SolitaireSessionId;
             cards[24] = card;
@@ -270,7 +270,7 @@ namespace Solitaire.Controllers
                 card = GetValidCard(cards);
 
                 // Generates the position cxrx begining with cxr1
-                card.Postition = $"c{column}r{i - (startValue - 1)}";
+                card.Position = $"c{column}r{i - (startValue - 1)}";
                 // flipped true --> value and type visible
                 card.Flipped = i == endValue;
                 card.SolitaireSessionId = gameRequest.SolitaireSessionId;
@@ -310,7 +310,7 @@ namespace Solitaire.Controllers
             if (row == 0)
                 return true;
 
-            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Postition == $"c{column}r{row - 1}")
+            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == $"c{column}r{row - 1}")
                 ?? throw new ArgumentException("Parent card does not exist.");
 
             if (CardHelper.CanBePlacedBottom(parent, card))
@@ -329,7 +329,7 @@ namespace Solitaire.Controllers
             if (buildPosition == 0)
                 return true;
 
-            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Postition == $"b{buildPosition - 1}")
+            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == $"b{buildPosition - 1}")
                 ?? throw new ArgumentException("Parent card does not exist.");
 
             if (CardHelper.CanBePlacedOnBuild(parent, card))
@@ -348,7 +348,7 @@ namespace Solitaire.Controllers
             if (drawPosition == 0)
                 return true;
 
-            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Postition == $"d{drawPosition - 1}")
+            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == $"d{drawPosition - 1}")
                 ?? throw new ArgumentException("Parent card does not exist.");
 
             return true;
@@ -363,7 +363,7 @@ namespace Solitaire.Controllers
         private async Task CheckIfCardExists(string position)
         {
 
-            var existingCard = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Postition == position);
+            var existingCard = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == position);
             if (existingCard is not null)
                 throw new ArgumentException("Card exists.");
         }
@@ -396,7 +396,7 @@ namespace Solitaire.Controllers
             var cards = (await _unitOfWork.Cards.GetAllAsync())
                 .Where(c => c.SolitaireSessionId == drawRequest.SolitaireSessionId);
 
-            var card = cards.Single(c => c.Postition == drawRequest.FromPosition);
+            var card = cards.Single(c => c.Position == drawRequest.FromPosition);
             var toPositionChar = drawRequest.ToPosition.ToArray();
             List<string> toPosition = new()
                 {
@@ -414,7 +414,7 @@ namespace Solitaire.Controllers
 
                     var drawCxRx = GetDraw(draws, drawRequest);
 
-                    card.Postition = drawCxRx.ToPosition;
+                    card.Position = drawCxRx.ToPosition;
                     await _unitOfWork.Cards.UpdateAsync(card);
                     await _unitOfWork.Draws.AddAsync(drawCxRx);
                     await _unitOfWork.SaveAsync();
