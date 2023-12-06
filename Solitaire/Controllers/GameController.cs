@@ -88,7 +88,7 @@ namespace Solitaire.Controllers
         /// If more than one cards are moved (only available in the cxrx deck)
         /// </summary>
         /// <param name="drawRequests"> A list of drawrequests </param>
-        /// <returns></returns>
+        /// <returns> Ok(true) if the move was possible otherwise Ok(false) </returns>
         [HttpPost]
         [Route("moveMore")]
         public async Task<IActionResult> MoveMoreThanOneCard([FromBody] List<DrawRequest> drawRequests)
@@ -279,6 +279,11 @@ namespace Solitaire.Controllers
             }
         }
 
+        /// <summary>
+        /// Parses a positionarray cx(x)rx(x) to cxrx
+        /// </summary>
+        /// <param name="toPositionChar"> The char array to parse </param>
+        /// <param name="toPosition"> The list containing the position </param>
         private void ParseCharArrayToList(char[] toPositionChar, List<string> toPosition)
         {
             string tempPos = string.Empty;
@@ -299,13 +304,20 @@ namespace Solitaire.Controllers
             toPosition.Add(tempPos);
         }
 
+        /// <summary>
+        /// Checks if the card can be placed at cxrx
+        /// </summary>
+        /// <param name="toPosition"> The position where the card is going to be placed </param>
+        /// <param name="card"> The card to be placed </param>
+        /// <returns> true if the card can be placed otherwise false </returns>
+        /// <exception cref="ArgumentException"></exception>
         private async Task<bool> CheckCardForColumn(List<string> toPosition, Card card)
         {
             // cxrx --> toPosition has 4 entries
             GetPositionAsInt(toPosition[1].ToString(), out int column);
             GetPositionAsInt(toPosition[3].ToString(), out int row);
 
-            await CheckIfCardExists($"c{column}r{row}");
+            await CheckIfCardExists($"c{column}r{row}", card);
 
             if (row == 0)
                 return true;
@@ -319,12 +331,19 @@ namespace Solitaire.Controllers
             return false;
         }
 
+        /// <summary>
+        /// Checks if the card can be placed on the build
+        /// </summary>
+        /// <param name="toPosition"> The position where the card is going to be placed </param>
+        /// <param name="card"> The card to be placed </param>
+        /// <returns> True if the card can be placed on the build otherwise false </returns>
+        /// <exception cref="ArgumentException"></exception>
         private async Task<bool> CheckCardForBuild(List<string> toPosition, Card card)
         {
             // bx --> toPosition has two entries
             GetPositionAsInt(toPosition[1], out int buildPosition);
 
-            await CheckIfCardExists($"b{buildPosition}");
+            await CheckIfCardExists($"b{buildPosition}", card);
 
             if (buildPosition == 0)
                 return true;
@@ -338,16 +357,28 @@ namespace Solitaire.Controllers
             return false;
         }
 
+        /// <summary>
+        /// Parses the position string x to an int
+        /// </summary>
+        /// <param name="number"> The position as string </param>
+        /// <param name="position"> The position as int </param>
+        /// <exception cref="ArgumentException"></exception>
         private void GetPositionAsInt(string number, out int position)
         {
             if (!int.TryParse(number, out position))
                 throw new ArgumentException("Number has the wrong format.");
         }
 
-        private async Task CheckIfCardExists(string position)
+        /// <summary>
+        /// Checks if a card on the specified position exists already
+        /// </summary>
+        /// <param name="position"> The position which should be checked </param>
+        /// <param name="card"> The card which stores the solitair session id </param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"> Throws an exception if the card exists on the position </exception>
+        private async Task CheckIfCardExists(string position, Card card)
         {
-
-            var existingCard = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == position);
+            var existingCard = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.SolitaireSessionId == card.SolitaireSessionId && c.Position == position);
             if (existingCard is not null)
                 throw new ArgumentException("Card exists.");
         }
