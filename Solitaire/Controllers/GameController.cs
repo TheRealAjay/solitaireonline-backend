@@ -84,25 +84,60 @@ namespace Solitaire.Controllers
             }
         }
 
+        /// <summary>
+        /// If more than one cards are moved (only available in the cxrx deck)
+        /// </summary>
+        /// <param name="drawRequests"> A list of drawrequests </param>
+        /// <returns></returns>
         [HttpPost]
         [Route("moveMore")]
         public async Task<IActionResult> MoveMoreThanOneCard([FromBody] List<DrawRequest> drawRequests)
         {
-            for (int i = 0; i < drawRequests.Count; i++)
+            try
             {
-                var result = await MoveCard(drawRequests[i]);
-                if (!result)
+                for (int i = 0; i < drawRequests.Count; i++)
                 {
-                    if (i == 0)
-                        return Ok(false);
-                    else
+                    var result = await MoveCard(drawRequests[i]);
+                    if (!result)
                     {
+                        if (i == 0)
+                            return Ok(false);
+                        else
+                        {
+                            var drawsToDelete = (await _unitOfWork.Draws.GetAllAsync())
+                                .Where(c => c.SolitaireSessionId == drawRequests[i].SolitaireSessionId)
+                                .OrderByDescending(c => c.Sort)
+                                .Take(i);
 
+                            foreach (var drawToDelete in drawsToDelete)
+                            {
+                                var cardToUpdate = (await _unitOfWork.Cards.GetAllAsync())
+                                    .Where(c => c.SolitaireSessionId == drawRequests[i].SolitaireSessionId)
+                                    .SingleOrDefault(c => c.Postition == drawToDelete.ToPosition);
+
+                                if (cardToUpdate is null)
+                                    continue;
+
+                                cardToUpdate.Postition = drawToDelete.FromPosition;
+
+                                await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
+                            }
+
+                            await _unitOfWork.Draws.RemoveRangeAsync(drawsToDelete);
+                            await _unitOfWork.SaveAsync();
+
+                            return Ok(false);
+                        }
                     }
                 }
-            }
 
-            return Ok(true);
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>
@@ -124,7 +159,6 @@ namespace Solitaire.Controllers
                 var draws = (await _unitOfWork.Draws.GetAllAsync())
                     .Where(c => c.SolitaireSessionId == flipRequest.SolitaireSessionId);
 
-                // If From and 
                 Draw draw = new()
                 {
                     FromPosition = flipRequest.Position,
