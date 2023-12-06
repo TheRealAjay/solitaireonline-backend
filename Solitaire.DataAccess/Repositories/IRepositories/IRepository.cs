@@ -12,5 +12,6 @@ namespace Solitaire.DataAccess.Repositories.IRepositories
         Task AddRangeAsync(IEnumerable<T> entity);
         Task UpdateAsync(T entity);
         Task RemoveAsync(T entity);
+        Task RemoveRangeAsync(IEnumerable<T> entity);
     }
 }

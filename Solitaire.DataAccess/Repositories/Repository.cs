@@ -55,6 +55,11 @@ namespace Solitaire.DataAccess.Repositories
             _dbSet.Remove(entity);
         }
 
+        public async Task RemoveRangeAsync(IEnumerable<T> entity)
+        {
+            _dbSet.RemoveRange(entity);
+        }
+
         public async Task UpdateAsync(T entity)
         {
             _dbSet.Attach(entity);
