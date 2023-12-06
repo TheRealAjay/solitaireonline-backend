@@ -6,6 +6,7 @@ using Solitaire.DataAccess.Repositories.IRepositories;
 using Solitaire.DataAccess.Services.IServices;
 using Solitaire.Models;
 using Solitaire.ViewModels;
+using System.Data;
 
 namespace Solitaire.Controllers
 {
@@ -82,7 +83,7 @@ namespace Solitaire.Controllers
 
                 var userExists = await _userManager.FindByNameAsync(request.UserName);
                 if (userExists is not null)
-                    throw new Exception("Username already in use.");
+                    throw new DuplicateNameException("Username already in use.");
 
                 var base64Picture = await GetProfilePicture(request.UserName);
 
@@ -98,6 +99,10 @@ namespace Solitaire.Controllers
                     throw new Exception("An error occured.");
 
                 return Ok($"User \"{request.UserName}\" successfully created.");
+            }
+            catch (DuplicateNameException ex)
+            {
+                return Conflict(ex.Message);
             }
             catch (Exception ex)
             {
