@@ -34,8 +34,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        var enumConverter = new JsonStringEnumConverter();
-        options.JsonSerializerOptions.Converters.Add(enumConverter);
+        var enumConverterValue = new JsonStringEnumConverterEx<Value>();
+        var enumConverterCardType = new JsonStringEnumConverterEx<CardType>();
+        options.JsonSerializerOptions.Converters.Add(enumConverterValue);
+        options.JsonSerializerOptions.Converters.Add(enumConverterCardType);
     });
 
 builder.Services.AddSwaggerGen(option =>
