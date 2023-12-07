@@ -195,6 +195,11 @@ namespace Solitaire.Controllers
             }
         }
 
+        /// <summary>
+        /// If the user clicks the backbutton a step back would be executed
+        /// </summary>
+        /// <param name="gameRequest"> The game request stores the solitaire session id </param>
+        /// <returns> Ok if the backwardsstep was successful otherwise the Statuscode will be 422 (UnprocessibleEntity) </returns>
         [HttpPost]
         [Route("back")]
         public async Task<IActionResult> StepBackwards([FromBody] GameRequest gameRequest)
