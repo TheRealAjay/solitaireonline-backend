@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Solitaire.Models
 {
-    public class JsonStringEnumConverterEx<TEnum> : JsonConverter<TEnum> where TEnum : struct, System.Enum
+    public class JsonStringEnumConverterEx<TEnum> : JsonConverter<TEnum> where TEnum : struct, Enum
     {
         private readonly Dictionary<TEnum, string> _enumToString = new Dictionary<TEnum, string>();
         private readonly Dictionary<string, TEnum> _stringToEnum = new Dictionary<string, TEnum>();
@@ -12,14 +12,14 @@ namespace Solitaire.Models
         public JsonStringEnumConverterEx()
         {
             var type = typeof(TEnum);
-            var values = System.Enum.GetValues<TEnum>();
+            var values = Enum.GetValues<TEnum>();
 
             foreach (var value in values)
             {
                 var enumMember = type.GetMember(value.ToString())[0];
                 var attr = enumMember.GetCustomAttributes(typeof(EnumMemberAttribute), false)
-                  .Cast<EnumMemberAttribute>()
-                  .FirstOrDefault();
+                    .Cast<EnumMemberAttribute>()
+                    .FirstOrDefault();
 
                 _stringToEnum.Add(value.ToString(), value);
 

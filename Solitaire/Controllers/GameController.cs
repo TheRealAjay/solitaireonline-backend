@@ -13,9 +13,11 @@ namespace Solitaire.Controllers
     [Route("[controller]")]
     public class GameController : ControllerBase
     {
+        #region PRIVATE FIELDS
         private readonly ILogger<GameController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUnitOfWork _unitOfWork;
+        #endregion
 
         public GameController(
             ILogger<GameController> logger,
@@ -27,6 +29,7 @@ namespace Solitaire.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        #region PUBLIC ACTIONS
         /// <summary>
         /// Creates the initial card deck (at beginning)
         /// </summary>
@@ -159,6 +162,10 @@ namespace Solitaire.Controllers
                 var draws = (await _unitOfWork.Draws.GetAllAsync())
                     .Where(c => c.SolitaireSessionId == flipRequest.SolitaireSessionId);
 
+                var cardToUpdate = cards.Single(c => c.Position == flipRequest.Position);
+
+                cardToUpdate.Flipped = true;
+
                 Draw draw = new()
                 {
                     FromPosition = flipRequest.Position,
@@ -175,6 +182,7 @@ namespace Solitaire.Controllers
                 else
                     draw.Sort = lastDraw.Sort + 1;
 
+                await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
                 await _unitOfWork.Draws.AddAsync(draw);
                 await _unitOfWork.SaveAsync();
                 
@@ -186,6 +194,45 @@ namespace Solitaire.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost]
+        [Route("back")]
+        public async Task<IActionResult> StepBackwards([FromBody] GameRequest gameRequest)
+        {
+            try
+            {
+                var cards = (await _unitOfWork.Cards.GetAllAsync())
+                    .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId);
+                var draw = (await _unitOfWork.Draws.GetAllAsync())
+                    .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId)
+                    .OrderByDescending(c => c.Sort)
+                    .FirstOrDefault()
+                    ?? throw new HttpRequestException("Step back not available. No draws were made.");
+
+                var cardToUpdate = cards.Single(c => c.Position == draw.ToPosition);
+
+                if (draw.WasFlipped)
+                    cardToUpdate.Flipped = !cardToUpdate.Flipped;
+                else
+                    cardToUpdate.Position = draw.FromPosition;
+
+                await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
+                await _unitOfWork.Draws.RemoveAsync(draw);
+                await _unitOfWork.SaveAsync();
+                
+                return Ok("Successfully processed step back.");
+            }
+            catch (HttpRequestException ex)
+            {
+                return UnprocessableEntity(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
 
         #region PRIVATE FUNCTIONS
 
@@ -297,6 +344,7 @@ namespace Solitaire.Controllers
                 else
                 {
                     toPosition.Add(tempPos);
+                    toPosition.Add(toPositionChar[i].ToString());
                     tempPos = string.Empty;
                 }
             }
