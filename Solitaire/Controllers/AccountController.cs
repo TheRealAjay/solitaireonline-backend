@@ -122,7 +122,7 @@ namespace Solitaire.Controllers
                 if (user is null)
                     return Ok("Username valid.");
                 else
-                    return BadRequest("Username already in use.");
+                    return Conflict("Username already in use.");
             }
             catch (Exception ex)
             {
