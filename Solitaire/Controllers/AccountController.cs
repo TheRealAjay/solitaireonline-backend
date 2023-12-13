@@ -14,10 +14,12 @@ namespace Solitaire.Controllers
     [Route("[controller]")]
     public class AccountController : ControllerBase
     {
+        #region PRIVATE FIELDS
         private readonly ILogger<AccountController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ITokenService _tokenService;
         private readonly IUnitOfWork _unitOfWork;
+        #endregion
 
         public AccountController(
             ILogger<AccountController> logger,
@@ -31,6 +33,7 @@ namespace Solitaire.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        #region PUBLIC ACTIONS
         [HttpPost]
         [Route("login")]
         public async Task<IActionResult> Authenticate([FromBody]AuthRequest model)
@@ -112,6 +115,31 @@ namespace Solitaire.Controllers
         }
 
         [HttpGet]
+        [Authorize]
+        [Route("logout")]
+        public async Task Logout()
+        {
+            try
+            {
+                var user = await _userManager.FindByNameAsync(User.Identity.Name);
+
+                Score? score = await _unitOfWork.Scores.GetFirstOrDefaultAsync(c => c.ApplicationUserId == user.Id && !c.IsFinished);
+                SolitaireSession? session = await _unitOfWork.SolitaireSessions.GetFirstOrDefaultAsync(c => c.ApplicationUserId == user.Id);
+
+                if (session is not null && score is not null)
+                {
+                    score.GameDuration += DateTime.UtcNow.Subtract(session.SessionContinuedOn.Value);
+                    await _unitOfWork.Scores.UpdateAsync(score);
+                    await _unitOfWork.SaveAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+        }
+
+        [HttpGet]
         [Route("check")]
         public async Task<IActionResult> CheckIfUserNameIsValid(string userName)
         {
@@ -130,7 +158,9 @@ namespace Solitaire.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        #endregion
 
+        #region PRIVATE FUNCTIONS
         private static string ConvertToBase64(Stream stream)
         {
             byte[] bytes;
@@ -158,5 +188,6 @@ namespace Solitaire.Controllers
 
             return base64String;
         }
+        #endregion
     }
 }
