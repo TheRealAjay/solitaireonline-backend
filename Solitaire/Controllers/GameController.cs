@@ -199,7 +199,7 @@ namespace Solitaire.Controllers
         /// If the user clicks the backbutton a step back would be executed
         /// </summary>
         /// <param name="gameRequest"> The game request stores the solitaire session id </param>
-        /// <returns> Ok if the backwardsstep was successful otherwise the Statuscode will be 422 (UnprocessibleEntity) </returns>
+        /// <returns> Ok(cardWhichWasReversed) if the backwardsstep was successful otherwise the Statuscode will be 422 (UnprocessibleEntity) </returns>
         [HttpPost]
         [Route("back")]
         public async Task<IActionResult> StepBackwards([FromBody] GameRequest gameRequest)
@@ -224,8 +224,9 @@ namespace Solitaire.Controllers
                 await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
                 await _unitOfWork.Draws.RemoveAsync(draw);
                 await _unitOfWork.SaveAsync();
-                
-                return Ok("Successfully processed step back.");
+
+                cardToUpdate.SolitaireSession = null;
+                return Ok(cardToUpdate);
             }
             catch (HttpRequestException ex)
             {
@@ -240,7 +241,6 @@ namespace Solitaire.Controllers
         #endregion
 
         #region PRIVATE FUNCTIONS
-
         /// <summary>
         /// Creates the drawpile
         /// </summary>
@@ -505,7 +505,6 @@ namespace Solitaire.Controllers
                     throw new Exception("Position not available");
             }
         }
-
         #endregion
     }
 }
