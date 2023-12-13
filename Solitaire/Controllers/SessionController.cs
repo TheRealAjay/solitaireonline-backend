@@ -10,7 +10,7 @@ namespace Solitaire.Controllers
     [Authorize]
     [ApiController]
     [Route("[controller]")]
-    public class SessionController : Controller
+    public class SessionController : ControllerBase
     {
         #region PRIVATE FIELDS
         private readonly ILogger<SessionController> _logger;

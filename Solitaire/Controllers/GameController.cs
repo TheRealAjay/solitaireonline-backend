@@ -526,6 +526,19 @@ namespace Solitaire.Controllers
                 await UpdateScore(-10);
             else if (drawRequest.FromPosition.StartsWith('d') && drawRequest.ToPosition.StartsWith('b'))
                 await UpdateScore(10);
+            else if (drawRequest.FromPosition.StartsWith('c') && drawRequest.ToPosition.StartsWith('c'))
+            {
+                var canGetScore = draws
+                    .Where(c => c.FromPosition == drawRequest.FromPosition && c.ToPosition == drawRequest.ToPosition)
+                    .Any();
+
+                var canGetScore2 = draws
+                    .Where(c => c.FromPosition == drawRequest.ToPosition && c.ToPosition == drawRequest.FromPosition)
+                    .Any();
+
+                if (!(canGetScore || canGetScore2))
+                    await UpdateScore(5);
+            }
 
             return true;
         }

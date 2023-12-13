@@ -43,7 +43,7 @@ namespace Solitaire.Helpers
         /// <param name="second"> The second card </param>
         /// <returns> True if the first card is Spade or Club and the second card is Heart or Diamond otherwise false </returns>
         /// <returns> True if the first card is Heart or Diamond and the second card is Spade or Club otherwise false </returns>
-        private static bool IsAlternateColor(Card first, Card second) => IsBlack(first) && IsRed(second);
+        private static bool IsAlternateColor(Card first, Card second) => (IsBlack(first) && IsRed(second)) || (IsRed(first) && IsBlack(second));
 
         /// <summary>
         /// Checks if the cards are in ascending order (Q -> K)
