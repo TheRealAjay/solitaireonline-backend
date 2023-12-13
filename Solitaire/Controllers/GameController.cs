@@ -226,7 +226,12 @@ namespace Solitaire.Controllers
                 await _unitOfWork.SaveAsync();
 
                 cardToUpdate.SolitaireSession = null;
-                return Ok(cardToUpdate);
+                return Ok(new
+                {
+                    draw.WasFlipped,
+                    FromPostition = draw.ToPosition,
+                    ToPosition = draw.FromPosition
+                });
             }
             catch (HttpRequestException ex)
             {
