@@ -219,7 +219,17 @@ namespace Solitaire.Controllers
                 if (draw.WasFlipped)
                     cardToUpdate.Flipped = !cardToUpdate.Flipped;
                 else
+                {
                     cardToUpdate.Position = draw.FromPosition;
+                    if (draw.FromPosition.StartsWith('b') && draw.ToPosition.StartsWith('c'))
+                        await UpdateScore(10);
+                    else if (draw.FromPosition.StartsWith('c') && draw.ToPosition.StartsWith('b'))
+                        await UpdateScore(-10);
+                    else if (draw.FromPosition.StartsWith('c') && draw.ToPosition.StartsWith('d'))
+                        await UpdateScore(-5);
+                    else if (draw.FromPosition.StartsWith('d') && draw.ToPosition.StartsWith('b'))
+                        await UpdateScore(-10);
+                }
 
                 await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
                 await _unitOfWork.Draws.RemoveAsync(draw);
@@ -485,30 +495,51 @@ namespace Solitaire.Controllers
                     if (!await CheckCardForColumn(toPosition, card))
                         return false;
 
-                    var drawCxRx = GetDraw(draws, drawRequest);
-
+                    Draw drawCxRx = GetDraw(draws, drawRequest);
                     card.Position = drawCxRx.ToPosition;
+
                     await _unitOfWork.Cards.UpdateAsync(card);
                     await _unitOfWork.Draws.AddAsync(drawCxRx);
                     await _unitOfWork.SaveAsync();
-
-                    return true;
+                    break;
 
                 case "b":
                     // Move to build
                     if (!await CheckCardForBuild(toPosition, card))
                         return false;
 
-                    var drawBx = GetDraw(draws, drawRequest);
+                    Draw drawBx = GetDraw(draws, drawRequest);
 
                     await _unitOfWork.Draws.AddAsync(drawBx);
                     await _unitOfWork.SaveAsync();
-
-                    return true;
+                    break;
 
                 default:
                     throw new Exception("Position not available");
             }
+
+            if (drawRequest.FromPosition.StartsWith('c') && drawRequest.ToPosition.StartsWith('b'))
+                await UpdateScore(10);
+            else if (drawRequest.FromPosition.StartsWith('d') && drawRequest.ToPosition.StartsWith('c'))
+                await UpdateScore(5);
+            else if (drawRequest.FromPosition.StartsWith('b') && drawRequest.ToPosition.StartsWith('c'))
+                await UpdateScore(-10);
+            else if (drawRequest.FromPosition.StartsWith('d') && drawRequest.ToPosition.StartsWith('b'))
+                await UpdateScore(10);
+
+            return true;
+        }
+
+        private async Task UpdateScore(int increasWith)
+        {
+            ApplicationUser user = await _userManager.FindByNameAsync(User.Identity.Name)
+                ?? throw new KeyNotFoundException("User was null.");
+
+            Score score = await _unitOfWork.Scores.GetSingleAsync(c => c.ApplicationUserId == user.Id && !c.IsFinished);
+
+            score.ScoreCount += increasWith;
+            await _unitOfWork.Scores.UpdateAsync(score);
+            await _unitOfWork.SaveAsync();
         }
         #endregion
     }

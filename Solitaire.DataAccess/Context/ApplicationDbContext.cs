@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Solitaire.Models;
 
 namespace Solitaire.DataAccess.Context
@@ -37,6 +36,14 @@ namespace Solitaire.DataAccess.Context
                 .Property(p => p.Id)
                 .UseIdentityColumn();
 
+            builder.Entity<Score>()
+                .Property(p => p.Id)
+                .UseIdentityColumn();
+
+            builder.Entity<ApplicationUser>()
+                .HasMany(c => c.Scores)
+                .WithOne(c => c.ApplicationUser);
+
             base.OnModelCreating(builder);
         }
 
@@ -47,5 +54,7 @@ namespace Solitaire.DataAccess.Context
         public DbSet<Card> Cards { get; set; }
 
         public DbSet<Draw> Draws { get; set; }
+
+        public DbSet<Score> Scores { get; set; }
     }
 }

@@ -11,5 +11,7 @@ namespace Solitaire.Models
         [ForeignKey(nameof(Models.SolitaireSession))]
         public virtual int? SolitaireSessionId { get; set; }
         public virtual SolitaireSession? SolitaireSession { get; set; }
+
+        public virtual ICollection<Score> Scores { get; set; } = new List<Score>();
     }
 }

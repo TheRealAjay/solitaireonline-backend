@@ -6,6 +6,7 @@ namespace Solitaire.Models
     {
         [Key]
         public int Id { get; set; }
+        public DateTime? SessionContinuedOn { get; set; }
         public DateTime? SessionStartDate { get; set; }
 
         public string? ApplicationUserId { get; set; }

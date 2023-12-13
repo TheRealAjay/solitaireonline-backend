@@ -37,6 +37,11 @@ namespace Solitaire.Controllers
                 if (session is null)
                     return Ok(null);
 
+                session.SessionContinuedOn = DateTime.UtcNow;
+
+                await _unitOfWork.SolitaireSessions.UpdateAsync(session);
+                await _unitOfWork.SaveAsync();
+
                 session.ApplicationUser = null;
 
                 return Ok(session);
@@ -58,22 +63,35 @@ namespace Solitaire.Controllers
         {
             try
             {
-                var user = await GetUser();
-
-                var session = await _unitOfWork.SolitaireSessions.GetFirstOrDefaultAsync(c => c.ApplicationUserId == user.Id);
+                ApplicationUser user = await GetUser();
+                SolitaireSession? session = await _unitOfWork.SolitaireSessions.GetFirstOrDefaultAsync(c => c.ApplicationUserId == user.Id);
 
                 if (session is not null)
                 {
+                    var scoreToDelete = await _unitOfWork.Scores.GetSingleAsync(c => c.ApplicationUserId == user.Id && !c.IsFinished);
+
                     await _unitOfWork.SolitaireSessions.RemoveAsync(session);
+                    await _unitOfWork.Scores.RemoveAsync(scoreToDelete);
                     await _unitOfWork.SaveAsync();
                 }
 
-                session = new SolitaireSession()
+                var utcNow = DateTime.UtcNow;
+                session = new()
                 {
                     ApplicationUserId = user.Id,
-                    SessionStartDate = DateTime.UtcNow
+                    SessionStartDate = utcNow,
+                    SessionContinuedOn = utcNow,
                 };
 
+                Score newScore = new()
+                {
+                    ApplicationUserId = user.Id,
+                    ScoreCount = 0,
+                    GameDuration = new TimeSpan(0, 0, 0, 0, 0, 0),
+                    IsFinished = false
+                };
+
+                await _unitOfWork.Scores.AddAsync(newScore);
                 await _unitOfWork.SolitaireSessions.AddAsync(session);
                 await _unitOfWork.SaveAsync();
 

@@ -14,6 +14,8 @@ namespace Solitaire.DataAccess.Repositories
 
         public IDrawRepository Draws { get; }
 
+        public IScoreRepository Scores { get; }
+
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -21,6 +23,7 @@ namespace Solitaire.DataAccess.Repositories
             SolitaireSessions = new SolitaireSessionRepository(context);
             Cards = new CardRepository(context);
             Draws = new DrawRepository(context);
+            Scores = new ScoreRepository(context);
         }
 
         public async Task SaveAsync()

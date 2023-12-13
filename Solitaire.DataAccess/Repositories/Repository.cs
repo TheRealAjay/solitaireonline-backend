@@ -40,6 +40,17 @@ namespace Solitaire.DataAccess.Repositories
             return await query.FirstOrDefaultAsync();
         }
 
+        public async Task<T> GetSingleAsync(Expression<Func<T, bool>> filter, bool asNoTracking = false)
+        {
+            IQueryable<T> query = _dbSet;
+            query = query.Where(filter);
+
+            if (asNoTracking)
+                return await query.AsNoTracking().SingleAsync();
+
+            return await query.SingleAsync();
+        }
+
         public async Task<IEnumerable<T>> GetAllAsync(bool asNoTracking = false)
         {
             IQueryable<T> query = _dbSet;
