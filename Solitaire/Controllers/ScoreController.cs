@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Solitaire.DataAccess.Repositories.IRepositories;
 using Solitaire.Models;
 using Solitaire.ViewModels;
+using System.Globalization;
 
 namespace Solitaire.Controllers
 {
@@ -63,7 +64,21 @@ namespace Solitaire.Controllers
                 IEnumerable<Score> scores = (await _unitOfWork.Scores.GetAllAsync())
                     .Where(c => c.ApplicationUserId == user.Id && c.IsFinished);
 
-                return Ok(scores);
+                List<ScoreResponse> response = new();
+
+                foreach (var score in scores)
+                {
+                    response.Add(new ScoreResponse()
+                    {
+                        ApplicationUserId = score.ApplicationUserId,
+                        Id = score.Id,
+                        IsFinished = score.IsFinished,
+                        Minutes = score.GameDuration.TotalMinutes.ToString(CultureInfo.InvariantCulture),
+                        ScoreCount = score.ScoreCount,
+                    });
+                }
+
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
