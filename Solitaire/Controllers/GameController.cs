@@ -14,9 +14,11 @@ namespace Solitaire.Controllers
     public class GameController : ControllerBase
     {
         #region PRIVATE FIELDS
+
         private readonly ILogger<GameController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUnitOfWork _unitOfWork;
+
         #endregion
 
         public GameController(
@@ -30,6 +32,7 @@ namespace Solitaire.Controllers
         }
 
         #region PUBLIC ACTIONS
+
         /// <summary>
         /// Creates the initial card deck (at beginning)
         /// </summary>
@@ -48,6 +51,28 @@ namespace Solitaire.Controllers
 
                 await _unitOfWork.Cards.AddRangeAsync(cards);
                 await _unitOfWork.SaveAsync();
+
+                return Ok(cards);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+        [HttpPost]
+        [Route("getCards")]
+        public async Task<IActionResult> GetCards([FromBody] GameRequest gameRequest)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    throw new Exception("Modelstate not valid.");
+
+                var cards = (await _unitOfWork.Cards.GetAllAsync())
+                    .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId);
 
                 return Ok(cards);
             }
@@ -175,7 +200,7 @@ namespace Solitaire.Controllers
                 };
 
                 var lastDraw = draws.OrderBy(c => c.Sort)
-                                    .LastOrDefault();
+                    .LastOrDefault();
 
                 if (lastDraw is null)
                     draw.Sort = 1;
@@ -185,7 +210,7 @@ namespace Solitaire.Controllers
                 await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
                 await _unitOfWork.Draws.AddAsync(draw);
                 await _unitOfWork.SaveAsync();
-                
+
                 return Ok(true);
             }
             catch (Exception ex)
@@ -209,10 +234,10 @@ namespace Solitaire.Controllers
                 var cards = (await _unitOfWork.Cards.GetAllAsync())
                     .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId);
                 var draw = (await _unitOfWork.Draws.GetAllAsync())
-                    .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId)
-                    .OrderByDescending(c => c.Sort)
-                    .FirstOrDefault()
-                    ?? throw new HttpRequestException("Step back not available. No draws were made.");
+                           .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId)
+                           .OrderByDescending(c => c.Sort)
+                           .FirstOrDefault()
+                           ?? throw new HttpRequestException("Step back not available. No draws were made.");
 
                 var cardToUpdate = cards.Single(c => c.Position == draw.ToPosition);
 
@@ -253,9 +278,11 @@ namespace Solitaire.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
         #endregion
 
         #region PRIVATE FUNCTIONS
+
         /// <summary>
         /// Creates the drawpile
         /// </summary>
@@ -270,7 +297,7 @@ namespace Solitaire.Controllers
                 card.Position = "d" + (i + 1);
                 card.Flipped = false;
                 card.SolitaireSessionId = gameRequest.SolitaireSessionId;
-                
+
                 cards[i] = card;
             }
         }
@@ -315,7 +342,6 @@ namespace Solitaire.Controllers
                     Type = (CardType)random.Next(0, 4),
                     Value = (Value)random.Next(0, 13)
                 };
-
             } while (cardsToCheck.Any(c => c.Type == card.Type && c.Value == card.Value));
 
             return card;
@@ -329,7 +355,8 @@ namespace Solitaire.Controllers
         /// <param name="column"> The column the card lays </param>
         /// <param name="cards"> The cards array </param>
         /// <param name="gameRequest"> Stores the solitairesessionID </param>
-        private void GenerateGameDeckCards(int startValue, int endValue, int column, Card[] cards, GameRequest gameRequest)
+        private void GenerateGameDeckCards(int startValue, int endValue, int column, Card[] cards,
+            GameRequest gameRequest)
         {
             Card card;
             for (int i = startValue; i <= endValue; i++)
@@ -387,11 +414,11 @@ namespace Solitaire.Controllers
 
             await CheckIfCardExists($"c{column}r{row}", card);
 
-            if (row == 0)
+            if (row == 1)
                 return true;
 
             var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == $"c{column}r{row - 1}")
-                ?? throw new ArgumentException("Parent card does not exist.");
+                         ?? throw new ArgumentException("Parent card does not exist.");
 
             if (CardHelper.CanBePlacedBottom(parent, card))
                 return true;
@@ -408,18 +435,19 @@ namespace Solitaire.Controllers
         /// <exception cref="ArgumentException"></exception>
         private async Task<bool> CheckCardForBuild(List<string> toPosition, Card card)
         {
-            // bx --> toPosition has two entries
-            GetPositionAsInt(toPosition[1], out int buildPosition);
+            // bxrx --> toPosition has two entries
+            GetPositionAsInt(toPosition[1], out int column);
+            GetPositionAsInt(toPosition[3], out int row);
 
-            await CheckIfCardExists($"b{buildPosition}", card);
+            await CheckIfCardExists($"b{column}r{row}", card);
 
-            if (buildPosition == 0)
+            if (row == 1)
                 return true;
 
-            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == $"b{buildPosition - 1}")
-                ?? throw new ArgumentException("Parent card does not exist.");
+            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == $"b{column}r{row - 1}")
+                         ?? throw new ArgumentException("Parent card does not exist.");
 
-            if (CardHelper.CanBePlacedOnBuild(parent, card))
+            if (CardHelper.CanBePlacedOnBuild(card, parent))
                 return true;
 
             return false;
@@ -446,7 +474,8 @@ namespace Solitaire.Controllers
         /// <exception cref="ArgumentException"> Throws an exception if the card exists on the position </exception>
         private async Task CheckIfCardExists(string position, Card card)
         {
-            var existingCard = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.SolitaireSessionId == card.SolitaireSessionId && c.Position == position);
+            var existingCard = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c =>
+                c.SolitaireSessionId == card.SolitaireSessionId && c.Position == position);
             if (existingCard is not null)
                 throw new ArgumentException("Card exists.");
         }
@@ -454,7 +483,7 @@ namespace Solitaire.Controllers
         private Draw GetDraw(IEnumerable<Draw> draws, DrawRequest drawRequest)
         {
             var lastDraw = draws.OrderBy(c => c.Sort)
-                                .LastOrDefault();
+                .LastOrDefault();
 
             Draw draw = new()
             {
@@ -482,9 +511,9 @@ namespace Solitaire.Controllers
             var card = cards.Single(c => c.Position == drawRequest.FromPosition);
             var toPositionChar = drawRequest.ToPosition.ToArray();
             List<string> toPosition = new()
-                {
-                    toPositionChar[0].ToString()
-                };
+            {
+                toPositionChar[0].ToString()
+            };
 
             ParseCharArrayToList(toPositionChar, toPosition);
 
@@ -509,7 +538,9 @@ namespace Solitaire.Controllers
                         return false;
 
                     Draw drawBx = GetDraw(draws, drawRequest);
-
+                    card.Position = drawBx.ToPosition;
+                    
+                    await _unitOfWork.Cards.UpdateAsync(card);
                     await _unitOfWork.Draws.AddAsync(drawBx);
                     await _unitOfWork.SaveAsync();
                     break;
@@ -546,7 +577,7 @@ namespace Solitaire.Controllers
         private async Task UpdateScore(int increasWith)
         {
             ApplicationUser user = await _userManager.FindByNameAsync(User.Identity.Name)
-                ?? throw new KeyNotFoundException("User was null.");
+                                   ?? throw new KeyNotFoundException("User was null.");
 
             Score score = await _unitOfWork.Scores.GetSingleAsync(c => c.ApplicationUserId == user.Id && !c.IsFinished);
 
@@ -554,6 +585,7 @@ namespace Solitaire.Controllers
             await _unitOfWork.Scores.UpdateAsync(score);
             await _unitOfWork.SaveAsync();
         }
+
         #endregion
     }
 }
