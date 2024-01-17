@@ -47,7 +47,10 @@ namespace Solitaire.Controllers
 
                 var session = await _unitOfWork.SolitaireSessions.GetFirstOrDefaultAsync(c => c.ApplicationUserId == user.Id);
 
-                if (session is null)
+                var score = (await _unitOfWork.Scores.GetAllAsync())
+                    .SingleOrDefault(c => c.ApplicationUserId == user.Id && !c.IsFinished);
+
+                if (session is null || score is null)
                     return Ok(null);
 
                 session.SessionContinuedOn = DateTime.UtcNow;
@@ -127,13 +130,13 @@ namespace Solitaire.Controllers
         }
 
         /// <summary>
-        /// Stop the 
+        /// Pauses the timer for the session
         /// </summary>
         /// <param name="gameRequest"> GameRequest stores the solitaire session id </param>
         /// <returns> StatusCode 200 if it was successful </returns>
         [HttpPost]
-        [Route("stopSession")]
-        public async Task<IActionResult> StopSession([FromBody] GameRequest gameRequest)
+        [Route("pause")]
+        public async Task<IActionResult> PauseSession([FromBody] GameRequest gameRequest)
         {
             try
             {
@@ -147,6 +150,43 @@ namespace Solitaire.Controllers
                     await _unitOfWork.Scores.UpdateAsync(score);
                     await _unitOfWork.SaveAsync();
                 }
+
+                return Ok();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return UnprocessableEntity(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Deletes the session, cards, draws and set the isFinished flag in the score table to true
+        /// </summary>
+        /// <param name="gameRequest"> GameRequest stores the solitaire session id </param>
+        /// <returns> StatusCode 200 if it was successful </returns>
+        [HttpPost]
+        [Route("end")]
+        public async Task<IActionResult> EndSession([FromBody] GameRequest gameRequest)
+        {
+            try
+            {
+                SolitaireSession session = await _unitOfWork.SolitaireSessions.FindAsync(gameRequest.SolitaireSessionId)
+                    ?? throw new KeyNotFoundException("No session created.");
+                Score score = await _unitOfWork.Scores.GetSingleAsync(c => c.ApplicationUserId == session.ApplicationUserId && !c.IsFinished);
+                var draws = (await _unitOfWork.Draws.GetAllAsync())
+                    .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId);
+                var cards = (await _unitOfWork.Cards.GetAllAsync())
+                    .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId);
+
+                score.IsFinished = true;
+                await _unitOfWork.Scores.UpdateAsync(score);
+
+                await _unitOfWork.SolitaireSessions.RemoveAsync(session);
+                await _unitOfWork.SaveAsync();
 
                 return Ok();
             }
