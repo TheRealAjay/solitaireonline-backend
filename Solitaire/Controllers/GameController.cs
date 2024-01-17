@@ -242,7 +242,7 @@ namespace Solitaire.Controllers
                     .OrderByDescending(c => c.Sort);
 
                 var draw = draws.FirstOrDefault()
-                    ?? throw new HttpRequestException("Step back not available. No draws were made.");
+                           ?? throw new HttpRequestException("Step back not available. No draws were made.");
 
                 var cardToUpdate = cards.Single(c => c.Position == draw.ToPosition);
 
@@ -504,8 +504,7 @@ namespace Solitaire.Controllers
 
         private Draw GetDraw(IEnumerable<Draw> draws, DrawRequest drawRequest)
         {
-            var lastDraw = draws.OrderBy(c => c.Sort)
-                .LastOrDefault();
+            var lastDraw = draws.MaxBy(c => c.Sort);
 
             Draw draw = new()
             {
@@ -582,12 +581,10 @@ namespace Solitaire.Controllers
             else if (drawRequest.FromPosition.StartsWith('c') && drawRequest.ToPosition.StartsWith('c'))
             {
                 var canGetScore = draws
-                    .Where(c => c.FromPosition == drawRequest.FromPosition && c.ToPosition == drawRequest.ToPosition)
-                    .Any();
+                    .Any(c => c.FromPosition == drawRequest.FromPosition && c.ToPosition == drawRequest.ToPosition);
 
                 var canGetScore2 = draws
-                    .Where(c => c.FromPosition == drawRequest.ToPosition && c.ToPosition == drawRequest.FromPosition)
-                    .Any();
+                    .Any(c => c.FromPosition == drawRequest.ToPosition && c.ToPosition == drawRequest.FromPosition);
 
                 if (!(canGetScore || canGetScore2))
                     await UpdateScore(5);
@@ -628,8 +625,7 @@ namespace Solitaire.Controllers
                 SolitaireSessionId = flipRequest.SolitaireSessionId
             };
 
-            var lastDraw = draws.OrderBy(c => c.Sort)
-                .LastOrDefault();
+            var lastDraw = draws.MaxBy(c => c.Sort);
 
             if (lastDraw is null)
                 draw.Sort = 1;
