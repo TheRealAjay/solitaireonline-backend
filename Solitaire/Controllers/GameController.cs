@@ -620,7 +620,7 @@ namespace Solitaire.Controllers
                 FromPosition = flipRequest.Position,
                 ToPosition = flipRequest.Position,
                 WasFlipped = true,
-                FlippedAllOnDrawDeck = flippedAll
+                FlippedAllOnDrawDeck = flippedAll,
                 SolitaireSessionId = flipRequest.SolitaireSessionId
             };
 
