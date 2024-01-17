@@ -169,7 +169,7 @@ namespace Solitaire.Controllers
         }
 
         /// <summary>
-        /// Flips a card --> visible
+        /// Flips a card --> visible or unvisible
         /// </summary>
         /// <param name="flipRequest"> The flip request class holds the values for flipping </param>
         /// <returns> Ok(true) if the card successfully flipped </returns>
@@ -189,7 +189,7 @@ namespace Solitaire.Controllers
 
                 var cardToUpdate = cards.Single(c => c.Position == flipRequest.Position);
 
-                cardToUpdate.Flipped = true;
+                cardToUpdate.Flipped = !cardToUpdate.Flipped;
 
                 Draw draw = new()
                 {
