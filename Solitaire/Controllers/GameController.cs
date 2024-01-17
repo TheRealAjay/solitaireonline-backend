@@ -161,6 +161,10 @@ namespace Solitaire.Controllers
 
                 return Ok(true);
             }
+            catch (ArgumentException ex)
+            {
+                return Ok(false);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
