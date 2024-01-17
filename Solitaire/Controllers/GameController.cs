@@ -182,40 +182,40 @@ namespace Solitaire.Controllers
                 if (!ModelState.IsValid)
                     throw new Exception("Modelstate not valid.");
 
-                var cards = (await _unitOfWork.Cards.GetAllAsync())
-                    .Where(c => c.SolitaireSessionId == flipRequest.SolitaireSessionId);
-                var draws = (await _unitOfWork.Draws.GetAllAsync())
-                    .Where(c => c.SolitaireSessionId == flipRequest.SolitaireSessionId);
-
-                var cardToUpdate = cards.Single(c => c.Position == flipRequest.Position);
-
-                cardToUpdate.Flipped = !cardToUpdate.Flipped;
-
-                Draw draw = new()
-                {
-                    FromPosition = flipRequest.Position,
-                    ToPosition = flipRequest.Position,
-                    WasFlipped = true,
-                    SolitaireSessionId = flipRequest.SolitaireSessionId
-                };
-
-                var lastDraw = draws.OrderBy(c => c.Sort)
-                    .LastOrDefault();
-
-                if (lastDraw is null)
-                    draw.Sort = 1;
-                else
-                    draw.Sort = lastDraw.Sort + 1;
-
-                await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
-                await _unitOfWork.Draws.AddAsync(draw);
-                await _unitOfWork.SaveAsync();
+                await Flip(flipRequest, false);
 
                 return Ok(true);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Flip more cards --> visible or unvisible
+        /// </summary>
+        /// <param name="flipRequests"> The flip requests list holds the flipRequest class which values should be flipped </param>
+        /// <returns> Ok(true) if the cards successfully flipped </returns>
+        [HttpPost]
+        [Route("flipMore")]
+        public async Task<IActionResult> FlipMore([FromBody] List<FlipRequest> flipRequests)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    throw new Exception("Modelstate not valid.");
+
+                foreach (var flipRequest in flipRequests)
+                {
+                    await Flip(flipRequest, true);
+                }
+
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
                 return BadRequest(ex.Message);
             }
         }
@@ -233,16 +233,33 @@ namespace Solitaire.Controllers
             {
                 var cards = (await _unitOfWork.Cards.GetAllAsync())
                     .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId);
-                var draw = (await _unitOfWork.Draws.GetAllAsync())
-                           .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId)
-                           .OrderByDescending(c => c.Sort)
-                           .FirstOrDefault()
-                           ?? throw new HttpRequestException("Step back not available. No draws were made.");
+                var draws = (await _unitOfWork.Draws.GetAllAsync())
+                    .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId)
+                    .OrderByDescending(c => c.Sort);
+
+                var draw = draws.FirstOrDefault()
+                    ?? throw new HttpRequestException("Step back not available. No draws were made.");
 
                 var cardToUpdate = cards.Single(c => c.Position == draw.ToPosition);
 
-                if (draw.WasFlipped)
+                if (draw.FlippedAllOnDrawDeck)
+                {
+                    var drawsFlipped = draws.TakeWhile(c => c.FlippedAllOnDrawDeck);
+                    foreach (var drawFlipped in drawsFlipped)
+                    {
+                        cardToUpdate = cards.Single(c => c.Position == drawFlipped.ToPosition);
+                        cardToUpdate.Flipped = !cardToUpdate.Flipped;
+                        await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
+                    }
+
+                    await _unitOfWork.Draws.RemoveRangeAsync(drawsFlipped);
+                }
+                else if (draw.WasFlipped)
+                {
                     cardToUpdate.Flipped = !cardToUpdate.Flipped;
+                    await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
+                    await _unitOfWork.Draws.RemoveAsync(draw);
+                }
                 else
                 {
                     cardToUpdate.Position = draw.FromPosition;
@@ -254,10 +271,11 @@ namespace Solitaire.Controllers
                         await UpdateScore(-5);
                     else if (draw.FromPosition.StartsWith('d') && draw.ToPosition.StartsWith('b'))
                         await UpdateScore(-10);
+
+                    await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
+                    await _unitOfWork.Draws.RemoveAsync(draw);
                 }
 
-                await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
-                await _unitOfWork.Draws.RemoveAsync(draw);
                 await _unitOfWork.SaveAsync();
 
                 cardToUpdate.SolitaireSession = null;
@@ -539,7 +557,7 @@ namespace Solitaire.Controllers
 
                     Draw drawBx = GetDraw(draws, drawRequest);
                     card.Position = drawBx.ToPosition;
-                    
+
                     await _unitOfWork.Cards.UpdateAsync(card);
                     await _unitOfWork.Draws.AddAsync(drawBx);
                     await _unitOfWork.SaveAsync();
@@ -583,6 +601,39 @@ namespace Solitaire.Controllers
 
             score.ScoreCount += increasWith;
             await _unitOfWork.Scores.UpdateAsync(score);
+            await _unitOfWork.SaveAsync();
+        }
+
+        private async Task Flip(FlipRequest flipRequest, bool flippedAll)
+        {
+            var cards = (await _unitOfWork.Cards.GetAllAsync())
+                .Where(c => c.SolitaireSessionId == flipRequest.SolitaireSessionId);
+            var draws = (await _unitOfWork.Draws.GetAllAsync())
+                .Where(c => c.SolitaireSessionId == flipRequest.SolitaireSessionId);
+
+            var cardToUpdate = cards.Single(c => c.Position == flipRequest.Position);
+
+            cardToUpdate.Flipped = !cardToUpdate.Flipped;
+
+            Draw draw = new()
+            {
+                FromPosition = flipRequest.Position,
+                ToPosition = flipRequest.Position,
+                WasFlipped = true,
+                FlippedAllOnDrawDeck = flippedAll
+                SolitaireSessionId = flipRequest.SolitaireSessionId
+            };
+
+            var lastDraw = draws.OrderBy(c => c.Sort)
+                .LastOrDefault();
+
+            if (lastDraw is null)
+                draw.Sort = 1;
+            else
+                draw.Sort = lastDraw.Sort + 1;
+
+            await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
+            await _unitOfWork.Draws.AddAsync(draw);
             await _unitOfWork.SaveAsync();
         }
 
