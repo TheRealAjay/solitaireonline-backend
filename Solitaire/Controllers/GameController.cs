@@ -414,7 +414,7 @@ namespace Solitaire.Controllers
 
             await CheckIfCardExists($"c{column}r{row}", card);
 
-            if (row == 1)
+            if (card.Value == Value.Rank_K && row == 1)
                 return true;
 
             var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == $"c{column}r{row - 1}")
@@ -441,7 +441,7 @@ namespace Solitaire.Controllers
 
             await CheckIfCardExists($"b{column}r{row}", card);
 
-            if (row == 1)
+            if (card.Value == Value.Rank_A && row == 1)
                 return true;
 
             var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == $"b{column}r{row - 1}")
