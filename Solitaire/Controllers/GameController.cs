@@ -103,7 +103,7 @@ namespace Solitaire.Controllers
             catch (ArgumentException ex)
             {
                 _logger.LogError(ex, ex.Message);
-                return BadRequest(ex.Message);
+                return Ok(false);
             }
             catch (Exception ex)
             {
