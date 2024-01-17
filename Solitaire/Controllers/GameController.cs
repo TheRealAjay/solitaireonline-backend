@@ -340,7 +340,7 @@ namespace Solitaire.Controllers
                 card = new Card()
                 {
                     Type = (CardType)random.Next(0, 4),
-                    Value = (Value)random.Next(0, 13)
+                    Value = (Value)random.Next(1, 14)
                 };
             } while (cardsToCheck.Any(c => c.Type == card.Type && c.Value == card.Value));
 

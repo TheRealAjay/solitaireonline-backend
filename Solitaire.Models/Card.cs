@@ -31,7 +31,7 @@ namespace Solitaire.Models
     public enum Value
     {
         [EnumMember(Value = "1")]
-        Rank_A,
+        Rank_A = 1,
         [EnumMember(Value = "2")]
         Rank_2,
         [EnumMember(Value = "3")]
