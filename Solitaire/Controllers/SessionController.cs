@@ -183,7 +183,11 @@ namespace Solitaire.Controllers
                     .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId);
 
                 score.IsFinished = true;
-                await _unitOfWork.Scores.UpdateAsync(score);
+                if (session is not null && score is not null)
+                {
+                    score.GameDuration += DateTime.UtcNow.Subtract(session.SessionContinuedOn.Value);
+                    await _unitOfWork.Scores.UpdateAsync(score);
+                }
 
                 await _unitOfWork.SolitaireSessions.RemoveAsync(session);
                 await _unitOfWork.SaveAsync();
