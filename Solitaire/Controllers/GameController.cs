@@ -258,24 +258,32 @@ namespace Solitaire.Controllers
 
                     await _unitOfWork.Draws.RemoveRangeAsync(drawsFlipped);
                 }
-                else if (draw.WasFlipped)
+                else if (draw.WasFlipped && draw.WasManualFlip)
                 {
                     cardToUpdate.Flipped = !cardToUpdate.Flipped;
                     await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
                     await _unitOfWork.Draws.RemoveAsync(draw);
                 }
+                else if (draw.WasFlipped && !draw.WasManualFlip)
+                {
+                    cardToUpdate.Flipped = !cardToUpdate.Flipped;
+                    var prevDraw = (await _unitOfWork.Draws.GetAllAsync())
+                        .Where(c => c.SolitaireSessionId == gameRequest.SolitaireSessionId)
+                        .OrderByDescending(c => c.Sort).Skip(1).FirstOrDefault();
+                    
+                    var prevCardToUpdate = cards.Single(c => c.Position == prevDraw.ToPosition);
+                    prevCardToUpdate.Position = prevDraw.FromPosition;
+                    await IncOrDecScore(prevDraw);
+                    
+                    await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
+                    await _unitOfWork.Draws.RemoveAsync(draw);
+                    await _unitOfWork.Cards.UpdateAsync(prevCardToUpdate);
+                    await _unitOfWork.Draws.RemoveAsync(prevDraw);
+                }
                 else
                 {
                     cardToUpdate.Position = draw.FromPosition;
-                    if (draw.FromPosition.StartsWith('b') && draw.ToPosition.StartsWith('c'))
-                        await UpdateScore(10);
-                    else if (draw.FromPosition.StartsWith('c') && draw.ToPosition.StartsWith('b'))
-                        await UpdateScore(-10);
-                    else if (draw.FromPosition.StartsWith('c') && draw.ToPosition.StartsWith('d'))
-                        await UpdateScore(-5);
-                    else if (draw.FromPosition.StartsWith('d') && draw.ToPosition.StartsWith('b'))
-                        await UpdateScore(-10);
-
+                    await IncOrDecScore(draw);
                     await _unitOfWork.Cards.UpdateAsync(cardToUpdate);
                     await _unitOfWork.Draws.RemoveAsync(draw);
                 }
@@ -304,6 +312,18 @@ namespace Solitaire.Controllers
         #endregion
 
         #region PRIVATE FUNCTIONS
+
+        private async Task IncOrDecScore(Draw draw)
+        {
+            if (draw.FromPosition.StartsWith('b') && draw.ToPosition.StartsWith('c'))
+                await UpdateScore(10);
+            else if (draw.FromPosition.StartsWith('c') && draw.ToPosition.StartsWith('b'))
+                await UpdateScore(-10);
+            else if (draw.FromPosition.StartsWith('c') && draw.ToPosition.StartsWith('d'))
+                await UpdateScore(-5);
+            else if (draw.FromPosition.StartsWith('d') && draw.ToPosition.StartsWith('b'))
+                await UpdateScore(-10);
+        }
 
         /// <summary>
         /// Creates the drawpile
@@ -439,7 +459,8 @@ namespace Solitaire.Controllers
             if (card.Value == Value.Rank_K && row == 1)
                 return true;
 
-            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == $"c{column}r{row - 1}")
+            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c =>
+                             c.Position == $"c{column}r{row - 1}" && c.SolitaireSessionId == card.SolitaireSessionId)
                          ?? throw new ArgumentException("Parent card does not exist.");
 
             if (CardHelper.CanBePlacedBottom(parent, card))
@@ -466,7 +487,8 @@ namespace Solitaire.Controllers
             if (card.Value == Value.Rank_A && row == 1)
                 return true;
 
-            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c => c.Position == $"b{column}r{row - 1}")
+            var parent = await _unitOfWork.Cards.GetFirstOrDefaultAsync(c =>
+                             c.Position == $"b{column}r{row - 1}" && c.SolitaireSessionId == card.SolitaireSessionId)
                          ?? throw new ArgumentException("Parent card does not exist.");
 
             if (CardHelper.CanBePlacedOnBuild(card, parent))
@@ -620,6 +642,7 @@ namespace Solitaire.Controllers
             {
                 FromPosition = flipRequest.Position,
                 ToPosition = flipRequest.Position,
+                WasManualFlip = flipRequest.ManualFlip,
                 WasFlipped = true,
                 FlippedAllOnDrawDeck = flippedAll,
                 SolitaireSessionId = flipRequest.SolitaireSessionId

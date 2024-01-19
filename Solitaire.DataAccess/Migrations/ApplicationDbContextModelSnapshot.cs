@@ -146,6 +146,9 @@ namespace Solitaire.DataAccess.Migrations
                     b.Property<bool>("WasFlipped")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("WasManualFlip")
+                        .HasColumnType("boolean");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SolitaireSessionId");
